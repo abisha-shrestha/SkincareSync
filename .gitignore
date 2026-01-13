@@ -14,3 +14,14 @@ frontend/.env
 # OS files
 .DS_Store
 Thumbs.db
+
+# node modules
+node_modules/
+frontend/node_modules/
+
+# env files
+.env
+
+# build
+dist/
+build/
