@@ -1,0 +1,20 @@
+.hero {
+  height: 90vh;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.hero-content button {
+  background: var(--cta-bg);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 30px;
+  margin-top: 20px;
+}

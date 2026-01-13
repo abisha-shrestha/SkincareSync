@@ -1,0 +1,14 @@
+.story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  padding: 100px 60px;
+  align-items: center;
+}
+
+.story button {
+  background: var(--cta-bg);
+  border: none;
+  padding: 12px 26px;
+  border-radius: 30px;
+}

@@ -1,0 +1,27 @@
+.products {
+  text-align: center;
+  padding: 80px 60px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin: 50px 0;
+}
+
+.card {
+  background: #fff;
+  padding: 40px;
+}
+
+.empty {
+  background: transparent;
+}
+
+.view-all {
+  background: var(--cta-bg);
+  border: none;
+  padding: 14px 30px;
+  border-radius: 30px;
+}
