@@ -12,3 +12,21 @@
   padding: 12px 26px;
   border-radius: 30px;
 }
+
+.story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  padding: 120px 6rem;
+}
+
+.story img {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+}
+
+.story h2 {
+  margin: 12px 0 16px;
+}

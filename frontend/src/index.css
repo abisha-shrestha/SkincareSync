@@ -1,8 +1,82 @@
-@import "./styles/variables.css";
-
 body {
-  margin: 0;
-  font-family: Inter, sans-serif;
-  background-color: var(--bg-cream);
-  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  color: #2b2b2b;
+
+}
+
+h1, h2 {
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+h1 {
+  font-size: 42px;
+}
+
+h2 {
+  font-size: 32px;
+}
+
+p {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+}
+
+section {
+  margin-bottom: 80px;
+}
+
+
+.label {
+  font-size: 12px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.desc {
+  max-width: 560px;
+  margin: 0 auto;
+  opacity: 0.9;
+}
+
+
+/* ========= Buttons (Global) ========= */
+
+.btn {
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.btn-cta {
+  border-color: #7a5c3e;
+  color: #7a5c3e;
+}
+
+.btn-cta:hover {
+  background-color: #7a5c3e;
+  color: #ffffff;
+}
+
+.btn-soft {
+  border-color: #cbbba0;
+  color: #4a3a2a;
+}
+
+.btn-soft:hover {
+  background-color: #cbbba0;
+  color: #2b1f15;
 }

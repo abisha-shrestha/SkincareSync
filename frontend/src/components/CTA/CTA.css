@@ -1,0 +1,39 @@
+.cta {
+  background-image: url("../../assets/images/cta-bg.jpg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: left center;
+  
+  padding: 120px 6rem;
+}
+
+.cta-content {
+  max-width: 500px;
+  margin-left: auto;
+}
+
+/* .cta button {
+  background: var(--cta-bg);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 30px;
+  margin-top: 20px;
+} */
+
+.cta .btn {
+  margin-top: 20px;
+}
+
+
+.cta-content {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+.cta button {
+  transition: all 0.3s ease;
+}
+
+.cta button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}

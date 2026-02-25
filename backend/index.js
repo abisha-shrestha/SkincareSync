@@ -16,6 +16,7 @@ app.get('/ping', (req,res)=>{
 app.use(bodyParser.json());
 app.use(cors());
 app.use('/auth', AuthRouter)
+app.use('/products', AuthRouter)
 
 app.listen(PORT, ()=>{
     console.log(`Server is eunning on ${PORT}`)
