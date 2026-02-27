@@ -1,20 +1,63 @@
+import { useState } from "react";
 import "./ProductGrid.css";
 
-export default function ProductGrid() {
+export default function ProductGrid({ limit }) {
+  const allProducts = [
+    { id: 1, name: "Hydrating Essence", price: 4000, category: "Hydration" },
+    { id: 2, name: "Restorative Serum", price: 5200, category: "Repair" },
+    { id: 3, name: "Night Recovery Cream", price: 7000, category: "Repair" },
+    { id: 4, name: "Purifying Cleanser", price: 3500, category: "Cleanser" },
+    { id: 5, name: "Balancing Toner", price: 3500, category: "Toner" },
+    { id: 6, name: "Daily Glow Moisturizer", price: 4500, category: "Hydration" }
+  ];
+
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  const filteredProducts =
+    activeCategory === "All"
+      ? allProducts
+      : allProducts.filter(
+          (product) => product.category === activeCategory
+        );
+
+  const displayedProducts = limit
+    ? filteredProducts.slice(0, limit)
+    : filteredProducts;
+
   return (
-    <section className="products">
-      <h2>Botanical Essentials</h2>
+    <>
+      {!limit && (
+        <div className="products-filters">
+          {["All", "Hydration", "Repair", "Cleanser", "Toner"].map(
+            (category) => (
+              <button
+                key={category}
+                className={`filter-btn ${
+                  activeCategory === category ? "active" : ""
+                }`}
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </button>
+            )
+          )}
+        </div>
+      )}
 
-      <div className="grid">
-        <div className="card">Hydrating Essence<br/>Rs. 4,000</div>
-        <div className="card">Restorative Serum<br/>Rs. 5,200</div>
-        <div className="card empty"></div>
-        <div className="card">Night Recovery<br/>Rs. 7,000</div>
-        <div className="card">Purifying Cleanser<br/>Rs. 3,500</div>
-        <div className="card">Balancing Toner<br/>Rs. 3,500</div>
+      <div className="products-grid">
+        {displayedProducts.map((product) => (
+          <div key={product.id} className="product-card">
+            <div className="product-image" />
+            <h3>{product.name}</h3>
+            <p className="product-price">
+              Rs. {product.price.toLocaleString()}
+            </p>
+            <button className="btn btn-soft">
+              View Details
+            </button>
+          </div>
+        ))}
       </div>
-
-      <button className="view-all">View All Products</button>
-    </section>
+    </>
   );
 }
