@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Quiz from "./pages/Quiz";
 import Products from "./pages/Products";
+import Auth from "./pages/Auth";
 
 
 
@@ -15,6 +16,7 @@ function App() {
       <Route path="/profile" element={<div>Profile Page</div>} />
       <Route path="/search" element={<div>Search Page</div>} />
       <Route path="/quiz" element={<Quiz />} />
+      <Route path="/auth" element={<Auth />} />
     </Routes>
   );
 }

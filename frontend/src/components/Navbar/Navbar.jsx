@@ -67,7 +67,7 @@ export default function Navbar() {
         <Link to="/search"><FiSearch /></Link>
         <Link to="/cart"><FiShoppingCart /></Link>
         <Link to="/wishlist"><FiHeart /></Link>
-        <Link to="/profile"><FiUser /></Link>
+        <Link to="/auth"><FiUser /></Link>
         <FiMenu className="menu-icon" />
       </div>
     </nav>

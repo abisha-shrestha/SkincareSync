@@ -7,7 +7,7 @@ export default function BrandMessage() {
       <h2>Simple, personalized, and data-driven</h2>
       <p className="desc">
         SkincareSync analyzes your skin type using a short quiz and recommends
-        products that actually suit you—no guesswork, no trial and error.
+        products that actually suit you, no guesswork, no trial and error.
       </p>
     </section>
   );
