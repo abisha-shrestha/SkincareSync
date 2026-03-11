@@ -1,4 +1,4 @@
-.hero {
+/* .hero {
   height: 75vh;
   background-image: url("../../assets/images/hero-bg.png");
   background-repeat: no-repeat;
@@ -31,15 +31,6 @@
   line-height: 1.6;
 }
 
-/* .hero-content button {
-  background: var(--cta-bg);
-  border: 2px solid var(--cta-bg);
-  padding: 14px 28px;
-  border-radius: 30px;
-  margin-top: 24px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-} */
 
 .hero-content .btn {
   margin-top: 24px;
@@ -60,4 +51,146 @@
 .hero-content button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+} */
+
+
+
+
+
+
+/* components/Hero/Hero.css */
+/* .hero {
+  height: 75vh;
+  background-image: url("../../assets/images/hero-bg.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: right center;
+  display: flex;
+  align-items: center;
+  padding: 0 6rem;
+}
+
+.hero-content {
+  max-width: 520px;
+  animation: fadeUp 0.8s ease forwards;
+}
+
+.hero-tag {
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hero-content h1 {
+  font-size: 42px;
+  margin: 16px 0;
+}
+
+.hero-content p {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+
+
+.hero-content .btn {
+  margin-top: 24px;
+}
+
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+} */
+
+
+
+.hero {
+  height: 85vh;
+  background: linear-gradient(135deg, 
+    rgba(248, 245, 241, 0.95) 0%, 
+    rgba(241, 237, 232, 0.9) 50%,
+    rgba(107, 93, 82, 0.05) 100%
+  ),
+  url("../../assets/images/hero-bg.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: right center;
+  display: flex;
+  align-items: center;
+  padding: 0 6rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(230, 235, 227, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(251, 248, 245, 0.4) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-content {
+  max-width: 520px;
+  animation: fadeUp 1s ease forwards;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.hero-content h1 {
+  background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 48px;
+}
+
+
+
+/*the float or something*/
+.hero-content {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  padding: 3rem;
+  border-radius: 28px;
+  box-shadow: 
+    var(--shadow-xl),
+    var(--border-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+/* Floating particles */
+.hero-content::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(107, 93, 82, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
 }

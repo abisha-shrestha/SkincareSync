@@ -65,8 +65,8 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                 localStorage.setItem("name", result.name);
                 localStorage.setItem("email", result.email);
                 alert("Login successful!");
-                // You can redirect here
-                // window.location.href = "/";
+                // Redirect here
+                window.location.href = "/";
             } else {
                 alert("Signup successful! Please login.");
                 toggleAuth();

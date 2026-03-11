@@ -47,9 +47,6 @@ section {
   opacity: 0.9;
 }
 
-
-/* ========= Buttons (Global) ========= */
-
 .btn {
   padding: 12px 28px;
   border-radius: 50px;
@@ -79,4 +76,17 @@ section {
 .btn-soft:hover {
   background-color: #cbbba0;
   color: #2b1f15;
-}
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+

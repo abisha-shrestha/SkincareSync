@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";  // ADD THIS
 import "./ProductGrid.css";
 
 export default function ProductGrid({ limit }) {
+  const navigate = useNavigate();  // ADD THIS
+
   const allProducts = [
     { id: 1, name: "Hydrating Essence", price: 4000, category: "Hydration" },
     { id: 2, name: "Restorative Serum", price: 5200, category: "Repair" },
@@ -16,37 +19,41 @@ export default function ProductGrid({ limit }) {
   const filteredProducts =
     activeCategory === "All"
       ? allProducts
-      : allProducts.filter(
-          (product) => product.category === activeCategory
-        );
+      : allProducts.filter((product) => product.category === activeCategory);
 
   const displayedProducts = limit
     ? filteredProducts.slice(0, limit)
     : filteredProducts;
 
+  // ADD THIS FUNCTION
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
+  };
+
   return (
     <>
       {!limit && (
         <div className="products-filters">
-          {["All", "Hydration", "Repair", "Cleanser", "Toner"].map(
-            (category) => (
-              <button
-                key={category}
-                className={`filter-btn ${
-                  activeCategory === category ? "active" : ""
-                }`}
-                onClick={() => setActiveCategory(category)}
-              >
-                {category}
-              </button>
-            )
-          )}
+          {["All", "Hydration", "Repair", "Cleanser", "Toner"].map((category) => (
+            <button
+              key={category}
+              className={`filter-btn ${activeCategory === category ? "active" : ""}`}
+              onClick={() => setActiveCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
         </div>
       )}
 
       <div className="products-grid">
         {displayedProducts.map((product) => (
-          <div key={product.id} className="product-card">
+          <div 
+            key={product.id} 
+            className="product-card"
+            onClick={() => handleProductClick(product.id)} // ADD THIS
+            style={{ cursor: 'pointer' }} // ADD THIS
+          >
             <div className="product-image" />
             <h3>{product.name}</h3>
             <p className="product-price">
