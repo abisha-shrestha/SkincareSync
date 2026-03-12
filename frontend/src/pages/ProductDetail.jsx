@@ -1,35 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 import "./ProductDetail.css"; 
 
-const allProducts = [
-    { 
-        id: 1, 
-        name: "Hydrating Essence", 
-        price: 4000, 
-        category: "Hydration",
-        image: "/api/products/1/image", 
-        description: "Lightweight essence that deeply hydrates without greasiness. Perfect for daily use.",
-        skinTypes: ["Normal", "Dry", "Combination"],
-        benefits: ["24hr hydration", "Strengthens barrier", "Non-comedogenic"]
-    },
-    { 
-        id: 2, 
-        name: "Restorative Serum", 
-        price: 5200, 
-        category: "Repair",
-        image: "/api/products/2/image",
-        description: "Advanced repair serum with peptides and antioxidants.",
-        skinTypes: ["All", "Aging", "Damaged"],
-        benefits: ["Reduces wrinkles", "Firms skin", "Brightens"]
-    },
-    // Others...
-    ];
-
-    export default function ProductDetail() {
+export default function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
@@ -37,25 +12,52 @@ const allProducts = [
     const [loading, setLoading] = useState(true);
     const [wishlist, setWishlist] = useState(false);
 
+    // CHANGE: Fetch SINGLE product from API
     useEffect(() => {
-        // Simulate API call
-        const foundProduct = allProducts.find(p => p.id === parseInt(id));
-        if (foundProduct) {
-        setProduct(foundProduct);
-        } else {
-        navigate("/products");
-        }
-        setLoading(false);
+        fetch(`http://localhost:3000/api/products/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.product) {
+            setProduct(data.product);
+            } else {
+            navigate("/products");
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            navigate("/products");
+        })
+        .finally(() => {
+            setLoading(false);
+        });
     }, [id, navigate]);
 
     const incrementQuantity = () => setQuantity(quantity + 1);
     const decrementQuantity = () => quantity > 1 && setQuantity(quantity - 1);
     
     const toggleWishlist = () => setWishlist(!wishlist);
-    const addToCart = () => alert(`Added ${quantity} of ${product?.name} to cart!`);
+    const addToCart = async () => {
+    try {
+        const userEmail = localStorage.getItem('email') || 'guest';
+        await fetch('http://localhost:3000/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userEmail,
+                productId: product._id,
+                quantity,
+                price: product.price
+            })
+        });
+        alert(`Added ${quantity} of ${product.name} to cart!`);
+    } catch (err) {
+        alert('Cart error');
+    }
+};
+
     const buyNow = () => alert("Redirecting to checkout...");
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div className="loading">Loading product...</div>;
     if (!product) return <div>Product not found</div>;
 
     return (
@@ -65,11 +67,14 @@ const allProducts = [
             <div className="product-detail-container">
             {/* Image Section */}
             <div className="product-image-section">
+                <div className="product-image-placeholder">
+                {/* Use imageUrl from DB or fallback */}
                 <img 
-                src={product.image} 
-                alt={product.name}
-                className="product-main-image"
+                    src={product.imageUrl || product.image || "/api/products/default.jpg"} 
+                    alt={product.name}
+                    className="product-main-image"
                 />
+                </div>
             </div>
 
             {/* Details Section */}
@@ -80,19 +85,14 @@ const allProducts = [
                     Rs. {product.price.toLocaleString()}
                 </p>
                 
-                {/* Wishlist Button */}
-                
                 <button 
                     className={`wishlist-btn ${wishlist ? 'active' : ''}`}
                     onClick={toggleWishlist}
                 >
                     <span className="heart-icon"></span>
                 </button>
-
-
                 </div>
 
-                {/* Quantity Selector */}
                 <div className="quantity-selector">
                 <label>Quantity</label>
                 <div className="quantity-controls">
@@ -102,7 +102,6 @@ const allProducts = [
                 </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="product-actions">
                 <button className="btn btn-cta buy-now-btn" onClick={buyNow}>
                     Buy Now
@@ -112,21 +111,22 @@ const allProducts = [
                 </button>
                 </div>
 
-                {/* Skin Types */}
+                {product.skinTypes && (
                 <div className="skin-types-section">
-                <h3>Best for skin types:</h3>
-                <div className="skin-type-tags">
+                    <h3>Best for skin types:</h3>
+                    <div className="skin-type-tags">
                     {product.skinTypes.map((type, index) => (
-                    <span key={index} className="skin-type-tag">
+                        <span key={index} className="skin-type-tag">
                         {type}
-                    </span>
+                        </span>
                     ))}
+                    </div>
                 </div>
-                </div>
+                )}
             </div>
             </div>
         </section>
         <Footer />
         </>
     );
-}
+    }

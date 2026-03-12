@@ -80,4 +80,25 @@
   color: #f2f2f2;
 }
 
+.cart-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #6b5d52;
+  color: white;
+  border-radius: 50%;
+  width: 16px;    /* SMALLER */
+  height: 16px;   /* SMALLER */
+  font-size: 10px; /* SMALLER */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
 

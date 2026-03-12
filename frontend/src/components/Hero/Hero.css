@@ -1,4 +1,4 @@
-/* .hero {
+.hero {
   height: 75vh;
   background-image: url("../../assets/images/hero-bg.png");
   background-repeat: no-repeat;
@@ -51,7 +51,7 @@
 .hero-content button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-} */
+}
 
 
 
@@ -117,6 +117,10 @@
 
 
 
+
+
+
+
 .hero {
   height: 85vh;
   background: linear-gradient(135deg, 
@@ -168,7 +172,7 @@
 
 
 
-/*the float or something*/
+
 .hero-content {
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(20px);
@@ -182,7 +186,6 @@
   position: relative;
 }
 
-/* Floating particles */
 .hero-content::before {
   content: '';
   position: absolute;

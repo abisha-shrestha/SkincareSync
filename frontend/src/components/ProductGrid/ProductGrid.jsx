@@ -1,20 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";  // ADD THIS
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";  
 import "./ProductGrid.css";
 
 export default function ProductGrid({ limit }) {
-  const navigate = useNavigate();  // ADD THIS
-
-  const allProducts = [
-    { id: 1, name: "Hydrating Essence", price: 4000, category: "Hydration" },
-    { id: 2, name: "Restorative Serum", price: 5200, category: "Repair" },
-    { id: 3, name: "Night Recovery Cream", price: 7000, category: "Repair" },
-    { id: 4, name: "Purifying Cleanser", price: 3500, category: "Cleanser" },
-    { id: 5, name: "Balancing Toner", price: 3500, category: "Toner" },
-    { id: 6, name: "Daily Glow Moisturizer", price: 4500, category: "Hydration" }
-  ];
-
+  const navigate = useNavigate();  
+  const [allProducts, setAllProducts] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setAllProducts(data.products || data || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const filteredProducts =
     activeCategory === "All"
@@ -25,10 +30,11 @@ export default function ProductGrid({ limit }) {
     ? filteredProducts.slice(0, limit)
     : filteredProducts;
 
-  // ADD THIS FUNCTION
-  const handleProductClick = (productId) => {
+  const handleProductClick = (productId) => {  // ✅ productId is parameter here
     navigate(`/product/${productId}`);
   };
+
+  if (loading) return <div>Loading products...</div>;
 
   return (
     <>
@@ -49,10 +55,10 @@ export default function ProductGrid({ limit }) {
       <div className="products-grid">
         {displayedProducts.map((product) => (
           <div 
-            key={product.id} 
+            key={product._id}  // ✅ FIXED: only _id, no fallback
             className="product-card"
-            onClick={() => handleProductClick(product.id)} // ADD THIS
-            style={{ cursor: 'pointer' }} // ADD THIS
+            onClick={() => handleProductClick(product._id)}  // ✅ FIXED: pass product._id
+            style={{ cursor: 'pointer' }}
           >
             <div className="product-image" />
             <h3>{product.name}</h3>
