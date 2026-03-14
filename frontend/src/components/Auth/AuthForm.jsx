@@ -64,9 +64,9 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                 localStorage.setItem("token", result.jwtToken);
                 localStorage.setItem("name", result.name);
                 localStorage.setItem("email", result.email);
+                localStorage.setItem("role", result.role); 
                 alert("Login successful!");
-                // Redirect here
-                window.location.href = "/";
+                window.location.href = result.role === 'admin' ? '/admin' : '/';  
             } else {
                 alert("Signup successful! Please login.");
                 toggleAuth();

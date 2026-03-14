@@ -1,0 +1,135 @@
+.wishlist-page {
+    padding: 140px 6rem 80px;
+    background: #fafafa;
+    min-height: 100vh;
+}
+
+.wishlist-wrapper {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.wishlist-header {
+    margin-bottom: 30px;
+}
+
+.wishlist-header h1 {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.wishlist-header p {
+    color: #777;
+    font-size: 14px;
+}
+
+/* LIST */
+
+.wishlist-items {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ITEM CARD — mirrors .cart-item */
+
+.wishlist-item {
+    display: grid;
+    grid-template-columns: 110px 1fr 40px;
+    align-items: center;
+    gap: 20px;
+    padding: 18px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    transition: box-shadow 0.2s ease;
+}
+
+.wishlist-item:hover {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+/* IMAGE */
+
+.wishlist-item-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    background: #f2f2f2;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.wishlist-item-image:hover {
+    opacity: 0.8;
+}
+
+/* DETAILS */
+
+.wishlist-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wishlist-item-details h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    cursor: pointer;
+}
+
+.wishlist-item-details h3:hover {
+    text-decoration: underline;
+}
+
+.wishlist-item-meta {
+    font-size: 13px;
+    color: #888;
+}
+
+.wishlist-item-price {
+    font-size: 14px;
+    color: #555;
+    margin-top: 4px;
+}
+
+/* ADD TO CART BUTTON */
+
+.wishlist-cart-btn {
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
+/* DELETE — reuse same class as Cart */
+
+.delete-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    justify-self: center;
+}
+
+.delete-btn:hover {
+    color: #e63946;
+}
+
+/* EMPTY */
+
+.empty-wishlist {
+    text-align: center;
+    padding: 120px 0;
+}
+
+.empty-wishlist .empty-icon {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.empty-wishlist p {
+    color: #777;
+    margin-bottom: 20px;
+}

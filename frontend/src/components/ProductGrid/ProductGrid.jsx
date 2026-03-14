@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";  
 import "./ProductGrid.css";
 
+
 export default function ProductGrid({ limit }) {
   const navigate = useNavigate();  
   const [allProducts, setAllProducts] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     fetch('http://localhost:3000/api/products')
@@ -21,20 +23,25 @@ export default function ProductGrid({ limit }) {
       });
   }, []);
 
+
   const filteredProducts =
     activeCategory === "All"
       ? allProducts
       : allProducts.filter((product) => product.category === activeCategory);
 
+
   const displayedProducts = limit
     ? filteredProducts.slice(0, limit)
     : filteredProducts;
+
 
   const handleProductClick = (productId) => {  // ✅ productId is parameter here
     navigate(`/product/${productId}`);
   };
 
+
   if (loading) return <div>Loading products...</div>;
+
 
   return (
     <>
@@ -52,9 +59,10 @@ export default function ProductGrid({ limit }) {
         </div>
       )}
 
+
       <div className="products-grid">
         {displayedProducts.map((product) => (
-          <div 
+          <div
             key={product._id}  // ✅ FIXED: only _id, no fallback
             className="product-card"
             onClick={() => handleProductClick(product._id)}  // ✅ FIXED: pass product._id

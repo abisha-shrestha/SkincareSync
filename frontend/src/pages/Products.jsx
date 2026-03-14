@@ -3,10 +3,12 @@ import Footer from "../components/Footer/Footer";
 import ProductGrid from "../components/ProductGrid/ProductGrid";
 import "../components/ProductGrid/ProductGrid.css";
 
+
 export default function Products() {
   return (
     <>
       <Navbar />
+
 
       <section className="products-page">
         <div className="products-header">
@@ -17,8 +19,10 @@ export default function Products() {
           </p>
         </div>
 
+
         <ProductGrid />
       </section>
+
 
       <Footer />
     </>
