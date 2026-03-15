@@ -363,7 +363,7 @@ export default function Cart() {
                                     <span>Total</span>
                                     <span>Rs. {total.toLocaleString()}</span>
                                 </div>
-                                <button className="btn btn-cta full-width">Proceed to Checkout →</button>
+                                <button className="btn btn-cta full-width" onClick={() => navigate("/checkout")}>Proceed to Checkout</button>
                                 <button className="btn btn-cta full-width secondary-btn" onClick={() => navigate("/products")}>
                                     Continue Shopping
                                 </button>

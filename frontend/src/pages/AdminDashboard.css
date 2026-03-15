@@ -319,3 +319,18 @@
 .btn-modal-save:hover {
     opacity: 0.88;
 }
+
+
+.status-select {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1.5px solid #ddd;
+    font-size: 13px;
+    cursor: pointer;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.status-select:focus {
+    outline: none;
+}

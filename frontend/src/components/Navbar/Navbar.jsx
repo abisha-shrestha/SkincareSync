@@ -1,146 +1,75 @@
-// import "./Navbar.css";
-// import { Link } from "react-router-dom";
-// import {
-//   FiSearch,
-//   FiShoppingCart,
-//   FiHeart,
-//   FiUser,
-//   FiMenu
-// } from "react-icons/fi";
-// import { useState, useEffect } from "react";  // ADD for cart count
-
-
-// export default function Navbar() {
-//   const [cartCount, setCartCount] = useState(0);  // ADD cart counter
-//   const userEmail = localStorage.getItem('email') || 'guest';
-
-
-//   // ADD: Fetch cart count
-//   useEffect(() => {
-//   const updateCartCount = () => {
-//     fetch(`http://localhost:3000/api/cart?userEmail=${userEmail}`)
-//       .then(res => res.json())
-//       .then(data => {
-//         const totalItems = data.cart?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
-//         setCartCount(totalItems);
-//       })
-//       .catch(() => setCartCount(0));
-//   };
-
-
-//   updateCartCount();  // Initial load
-//   const interval = setInterval(updateCartCount, 1000);  // Update every 2s
-
-//   return () => clearInterval(interval);  // Cleanup
-// }, [userEmail]);
-
-
-
-//   return (
-//     <nav className="navbar">
-//       <Link to="/" className="nav-left">
-//         SkincareSync
-//       </Link>
-
-
-//       <ul className="nav-center">
-//         <li>
-//           <Link to="/products">Products</Link>
-//         </li>
-//         <li>
-//           <Link to="/quiz">Quiz</Link>
-//         </li>
-//       </ul>
-
-
-//       <div className="nav-right">
-//         <Link to="/search"><FiSearch /></Link>
-      
-//         {/* Cart with counter */}
-//         <Link to="/cart" className="cart-link">
-//           <FiShoppingCart />
-//           {cartCount > 0 && (
-//             <span className="cart-badge">{cartCount}</span>
-//           )}
-//         </Link>
-      
-//         <Link to="/wishlist"><FiHeart /></Link>
-//         <Link to="/auth"><FiUser /></Link>
-//         <FiMenu className="menu-icon" />
-//       </div>
-//     </nav>
-//   );
-// }
-
-
 import "./Navbar.css";
-import { Link } from "react-router-dom";
-import {
-  FiSearch,
-  FiShoppingCart,
-  FiHeart,
-  FiUser,
-  FiMenu
-} from "react-icons/fi";
+import { Link, useLocation } from "react-router-dom";
+import { FiSearch, FiShoppingCart, FiHeart, FiUser } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
-  const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
-  const userEmail = localStorage.getItem('email') || 'guest';
+    const [cartCount, setCartCount] = useState(0);
+    const [wishlistCount, setWishlistCount] = useState(0);
+    const [scrolled, setScrolled] = useState(false);
+    const userEmail = localStorage.getItem('email') || 'guest';
+    const location = useLocation();
 
-  useEffect(() => {
-    const updateCounts = () => {
-      // Cart count
-      fetch(`http://localhost:3000/api/cart?userEmail=${userEmail}`)
-        .then(res => res.json())
-        .then(data => {
-          const total = data.cart?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
-          setCartCount(total);
-        })
-        .catch(() => setCartCount(0));
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
-      // Wishlist count
-      fetch(`http://localhost:3000/api/wishlist?userEmail=${userEmail}`)
-        .then(res => res.json())
-        .then(data => {
-          setWishlistCount(data.wishlist?.items?.length || 0);
-        })
-        .catch(() => setWishlistCount(0));
-    };
+    useEffect(() => {
+        const updateCounts = () => {
+            fetch(`http://localhost:3000/api/cart?userEmail=${userEmail}`)
+                .then(res => res.json())
+                .then(data => {
+                    const total = data.cart?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+                    setCartCount(total);
+                })
+                .catch(() => setCartCount(0));
 
-    updateCounts();
-    const interval = setInterval(updateCounts, 1000);
-    return () => clearInterval(interval);
-  }, [userEmail]);
+            fetch(`http://localhost:3000/api/wishlist?userEmail=${userEmail}`)
+                .then(res => res.json())
+                .then(data => setWishlistCount(data.wishlist?.items?.length || 0))
+                .catch(() => setWishlistCount(0));
+        };
 
-  return (
-    <nav className="navbar">
-      <Link to="/" className="nav-left">
-        SkincareSync
-      </Link>
+        updateCounts();
+        const interval = setInterval(updateCounts, 3000);
+        return () => clearInterval(interval);
+    }, [userEmail]);
 
-      <ul className="nav-center">
-        <li><Link to="/products">Products</Link></li>
-        <li><Link to="/quiz">Quiz</Link></li>
-      </ul>
+    const isActive = (path) => location.pathname === path;
 
-      <div className="nav-right">
-        <Link to="/search"><FiSearch /></Link>
+    return (
+        <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
+            <div className="navbar-inner">
 
-        <Link to="/cart" className="cart-link">
-          <FiShoppingCart />
-          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-        </Link>
+                <Link to="/" className="nav-brand">
+                    SkincareSync
+                </Link>
 
-        <Link to="/wishlist" className="cart-link">
-          <FiHeart />
-          {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
-        </Link>
+                <ul className="nav-links">
+                    <li><Link to="/products" className={isActive('/products') ? 'active' : ''}>Products</Link></li>
+                    <li><Link to="/quiz" className={isActive('/quiz') ? 'active' : ''}>Quiz</Link></li>
+                </ul>
 
-        <Link to="/auth"><FiUser /></Link>
-        <FiMenu className="menu-icon" />
-      </div>
-    </nav>
-  );
+                <div className="nav-icons">
+                    <Link to="/search" className="nav-icon-btn" aria-label="Search">
+                        <FiSearch />
+                    </Link>
+                    <Link to="/cart" className="nav-icon-btn nav-icon-badge" aria-label="Cart">
+                        <FiShoppingCart />
+                        {cartCount > 0 && <span className="badge">{cartCount}</span>}
+                    </Link>
+                    <Link to="/wishlist" className="nav-icon-btn nav-icon-badge" aria-label="Wishlist">
+                        <FiHeart />
+                        {wishlistCount > 0 && <span className="badge">{wishlistCount}</span>}
+                    </Link>
+                    <Link to="/profile" className="nav-icon-btn" aria-label="Profile">
+                        <FiUser />
+                    </Link>
+                </div>
+
+            </div>
+        </nav>
+    );
 }
