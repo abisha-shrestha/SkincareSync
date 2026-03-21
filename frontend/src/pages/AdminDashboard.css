@@ -336,3 +336,44 @@
 .status-select:focus {
     outline: none;
 }
+
+.stat-card-clickable {
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.stat-card-clickable:hover {
+    box-shadow: 0 8px 24px rgba(107,93,82,0.12);
+    transform: translateY(-2px);
+}
+
+.stat-arrow {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #c8bdb6;
+    transition: color 0.2s, right 0.2s;
+}
+
+.stat-card-clickable:hover .stat-arrow {
+    color: #8B5E3C;
+    right: 12px;
+}
+
+.analytics-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #eee;
+    padding: 28px;
+    margin-top: 24px;
+}
+
+.analytics-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #3a2e28;
+    margin-bottom: 24px;
+}

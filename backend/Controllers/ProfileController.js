@@ -19,7 +19,6 @@ const updateProfile = async (req, res) => {
     try {
         const { userEmail, fullName, phone, city, birthdate, gender } = req.body;
 
-        // Validations
         if (fullName !== undefined && fullName.trim().length < 3) {
             return res.status(400).json({ success: false, message: 'Full name must be at least 3 characters' });
         }
@@ -36,6 +35,32 @@ const updateProfile = async (req, res) => {
             { new: true, upsert: true }
         );
         res.json({ success: true, profile });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+const saveSkinType = async (req, res) => {
+    try {
+        const { userEmail, skinType } = req.body;
+        const user = await UserModel.findOneAndUpdate(
+            { email: userEmail },
+            { skinType },
+            { new: true }
+        );
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        res.json({ success: true, skinType: user.skinType });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+const getSkinType = async (req, res) => {
+    try {
+        const { userEmail } = req.query;
+        const user = await UserModel.findOne({ email: userEmail }).select('skinType');
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        res.json({ success: true, skinType: user.skinType || '' });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -74,7 +99,6 @@ const deleteAccount = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(403).json({ success: false, message: 'Incorrect password' });
 
-        // Soft delete
         user.isDeleted = true;
         user.deletedAt = new Date();
         await user.save();
@@ -85,4 +109,4 @@ const deleteAccount = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfile, changePassword, deleteAccount };
+module.exports = { getProfile, updateProfile, saveSkinType, getSkinType, changePassword, deleteAccount };

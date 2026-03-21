@@ -77,4 +77,37 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-module.exports = { getStats, getUsers, deleteUser, getProducts, createProduct, updateProduct, deleteProduct };
+const getAnalytics = async (req, res) => {
+    try {
+        const days = 7;
+        const result = [];
+
+        for (let i = days - 1; i >= 0; i--) {
+            const start = new Date();
+            start.setDate(start.getDate() - i);
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(start);
+            end.setHours(23, 59, 59, 999);
+
+            const orders = await Order.find({
+                createdAt: { $gte: start, $lte: end },
+                status: { $ne: 'Cancelled' }
+            });
+
+            const revenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+            result.push({
+                date: start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                revenue,
+                orders: orders.length
+            });
+        }
+
+        res.json({ success: true, analytics: result });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+module.exports = { getStats, getUsers, deleteUser, getProducts, createProduct, updateProduct, deleteProduct, getAnalytics };

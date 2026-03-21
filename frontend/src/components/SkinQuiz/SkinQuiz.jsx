@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./SkinQuiz.css";
 
 const questions = [
@@ -133,12 +134,60 @@ function calculateSkinType(answers) {
 }
 
 export default function SkinQuiz() {
+    const navigate = useNavigate();
+    const userEmail = localStorage.getItem('email');
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState([]);
     const [result, setResult] = useState(null);
     const [selected, setSelected] = useState(null);
+    const [existingSkinType, setExistingSkinType] = useState(null);
+    const [loadingExisting, setLoadingExisting] = useState(true);
+    const [quizMode, setQuizMode] = useState(false); // true = taking quiz
 
     const progress = Math.round((currentIndex / questions.length) * 100);
+
+    // On mount — check existing skin type
+    useEffect(() => {
+        const checkExisting = async () => {
+            // Logged in — check DB
+            if (userEmail) {
+                try {
+                    const res = await fetch(`http://localhost:3000/api/profile/skin-type?userEmail=${userEmail}`);
+                    const data = await res.json();
+                    if (data.success && data.skinType) {
+                        setExistingSkinType(data.skinType);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                // Guest — check sessionStorage
+                const session = sessionStorage.getItem('skinType');
+                if (session) setExistingSkinType(session);
+            }
+            setLoadingExisting(false);
+        };
+        checkExisting();
+    }, []);
+
+    const saveSkinType = async (skinType) => {
+        if (userEmail) {
+            // Logged in — save to DB
+            try {
+                await fetch('http://localhost:3000/api/profile/skin-type', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userEmail, skinType })
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        } else {
+            // Guest — save to sessionStorage
+            sessionStorage.setItem('skinType', skinType);
+        }
+    };
 
     const handleAnswer = (option) => {
         setSelected(option.text);
@@ -147,6 +196,7 @@ export default function SkinQuiz() {
             if (currentIndex + 1 >= questions.length) {
                 const skinType = calculateSkinType(newAnswers);
                 setResult(skinType);
+                saveSkinType(skinType);
             }
             setAnswers(newAnswers);
             setCurrentIndex(currentIndex + 1);
@@ -166,14 +216,64 @@ export default function SkinQuiz() {
         setAnswers([]);
         setResult(null);
         setSelected(null);
+        setQuizMode(true);
     };
+
+    const handleStartQuiz = () => {
+        setQuizMode(true);
+        setCurrentIndex(0);
+        setAnswers([]);
+        setResult(null);
+    };
+
+    if (loadingExisting) {
+        return (
+            <div className="quiz-overlay">
+                <div className="quiz-bg-blob quiz-blob-1" />
+                <div className="quiz-bg-blob quiz-blob-2" />
+                <div className="quiz-container" style={{ textAlign: 'center' }}>
+                    <p style={{ color: '#6b5d52' }}>Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="quiz-overlay">
             <div className="quiz-bg-blob quiz-blob-1" />
             <div className="quiz-bg-blob quiz-blob-2" />
 
-            {!result ? (
+            {/* Already taken — show existing result */}
+            {existingSkinType && !quizMode && !result && (
+                <div className="quiz-container quiz-result-container">
+                    <p className="quiz-result-label">Your current skin type is</p>
+                    <h1 className="quiz-result-type">
+                        {skinTypeInfo[existingSkinType].label}
+                    </h1>
+                    <p className="quiz-result-desc">
+                        {skinTypeInfo[existingSkinType].description}
+                    </p>
+                    <div className="quiz-traits">
+                        {skinTypeInfo[existingSkinType].traits.map((trait, i) => (
+                            <div key={i} className="quiz-trait">
+                                <span className="quiz-trait-dot" />
+                                {trait}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="quiz-result-actions">
+                        <button className="quiz-retake-btn" onClick={handleStartQuiz}>
+                            Retake Quiz
+                        </button>
+                        <button className="quiz-shop-btn" onClick={() => navigate('/products')}>
+                            Shop for my skin type
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Quiz in progress */}
+            {(quizMode || (!existingSkinType && !result)) && !result && (
                 <div className="quiz-container">
                     <div className="quiz-header">
                         <h1 className="quiz-title">Skin Analysis</h1>
@@ -213,7 +313,10 @@ export default function SkinQuiz() {
                         </button>
                     )}
                 </div>
-            ) : (
+            )}
+
+            {/* New result after completing quiz */}
+            {result && (
                 <div className="quiz-container quiz-result-container">
                     <p className="quiz-result-label">Your skin type is</p>
                     <h1 className="quiz-result-type">
@@ -222,7 +325,6 @@ export default function SkinQuiz() {
                     <p className="quiz-result-desc">
                         {skinTypeInfo[result].description}
                     </p>
-
                     <div className="quiz-traits">
                         {skinTypeInfo[result].traits.map((trait, i) => (
                             <div key={i} className="quiz-trait">
@@ -231,10 +333,12 @@ export default function SkinQuiz() {
                             </div>
                         ))}
                     </div>
-
                     <div className="quiz-result-actions">
                         <button className="quiz-retake-btn" onClick={handleRetake}>
                             Retake Quiz
+                        </button>
+                        <button className="quiz-shop-btn" onClick={() => navigate('/products')}>
+                            Shop for my skin type
                         </button>
                     </div>
                 </div>

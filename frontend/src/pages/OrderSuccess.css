@@ -1,0 +1,42 @@
+.order-success-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    padding: 60px 24px;
+}
+
+.order-success-card {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+    max-width: 460px;
+    width: 100%;
+}
+
+.order-success-icon {
+    font-size: 60px;
+    color: var(--accent);
+    margin-bottom: 20px;
+}
+
+.order-success-card h1 {
+    font-size: 26px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.order-success-card p {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+
+.order-success-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}

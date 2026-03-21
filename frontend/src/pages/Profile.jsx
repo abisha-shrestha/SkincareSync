@@ -1,51 +1,50 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 import "./Profile.css";
+import { useTheme } from "../ThemeContext";
 
 export default function Profile() {
     const navigate = useNavigate();
     const userEmail = localStorage.getItem("email") || "";
     const userName = localStorage.getItem("name") || "";
     const [activeTab, setActiveTab] = useState("personal");
+    const { theme, toggleTheme } = useTheme();
 
-    // Personal details
     const [profile, setProfile] = useState({ fullName: "", phone: "", city: "", birthdate: "", gender: "" });
     const [profileErrors, setProfileErrors] = useState({});
-    const [profileMsg, setProfileMsg] = useState("");
+    const [skinType, setSkinType] = useState("");
 
-    // Addresses
     const [addresses, setAddresses] = useState([]);
     const [showAddressForm, setShowAddressForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState(null);
     const [addressForm, setAddressForm] = useState({ label: "", fullName: "", phone: "", address: "", city: "", isDefault: false });
     const [addressErrors, setAddressErrors] = useState({});
 
-    // Orders
     const [orders, setOrders] = useState([]);
     const [ordersLoading, setOrdersLoading] = useState(false);
 
-    // Wishlist
-    const [wishlistItems, setWishlistItems] = useState([]);
-    const [wishlistLoading, setWishlistLoading] = useState(false);
-
-    // Settings
     const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
     const [passwordErrors, setPasswordErrors] = useState({});
-    const [passwordMsg, setPasswordMsg] = useState("");
     const [deletePassword, setDeletePassword] = useState("");
     const [deleteError, setDeleteError] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    const skinTypeLabels = {
+        dry: 'Dry Skin', oily: 'Oily Skin', combination: 'Combination Skin',
+        normal: 'Normal Skin', sensitive: 'Sensitive Skin'
+    };
+
     useEffect(() => {
         if (!userEmail) { navigate("/auth"); return; }
         fetchProfile();
+        fetchSkinType();
     }, []);
 
     useEffect(() => {
         if (activeTab === "orders") fetchOrders();
-        if (activeTab === "wishlist") fetchWishlist();
         if (activeTab === "address") fetchAddresses();
     }, [activeTab]);
 
@@ -54,6 +53,14 @@ export default function Profile() {
             const res = await fetch(`http://localhost:3000/api/profile?userEmail=${userEmail}`);
             const data = await res.json();
             if (data.success) setProfile(data.profile);
+        } catch (err) { console.error(err); }
+    };
+
+    const fetchSkinType = async () => {
+        try {
+            const res = await fetch(`http://localhost:3000/api/profile/skin-type?userEmail=${userEmail}`);
+            const data = await res.json();
+            if (data.success) setSkinType(data.skinType || "");
         } catch (err) { console.error(err); }
     };
 
@@ -67,16 +74,6 @@ export default function Profile() {
         finally { setOrdersLoading(false); }
     };
 
-    const fetchWishlist = async () => {
-        setWishlistLoading(true);
-        try {
-            const res = await fetch(`http://localhost:3000/api/wishlist?userEmail=${userEmail}`);
-            const data = await res.json();
-            setWishlistItems(data.wishlist?.items || []);
-        } catch (err) { console.error(err); }
-        finally { setWishlistLoading(false); }
-    };
-
     const fetchAddresses = async () => {
         try {
             const res = await fetch(`http://localhost:3000/api/addresses?userEmail=${userEmail}`);
@@ -85,7 +82,6 @@ export default function Profile() {
         } catch (err) { console.error(err); }
     };
 
-    // Validation helpers
     const validatePhone = (phone) => {
         if (!phone || phone.trim() === '') return null;
         if (!/^(97|98)\d{8}$/.test(phone.trim())) return 'Phone must start with 97 or 98 and be exactly 10 digits';
@@ -114,12 +110,11 @@ export default function Profile() {
             });
             const data = await res.json();
             if (data.success) {
-                setProfileMsg("Profile updated successfully");
-                setTimeout(() => setProfileMsg(""), 3000);
+                toast.success("Profile updated successfully");
             } else {
-                setProfileErrors({ general: data.message });
+                toast.error(data.message || "Failed to update profile");
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { toast.error("Something went wrong"); }
     };
 
     const validateAddressForm = () => {
@@ -154,14 +149,16 @@ export default function Profile() {
                 setShowAddressForm(false);
                 setEditingAddress(null);
                 setAddressForm({ label: "", fullName: "", phone: "", address: "", city: "", isDefault: false });
+                toast.success(editingAddress ? "Address updated" : "Address saved");
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { toast.error("Something went wrong"); }
     };
 
     const handleDeleteAddress = async (id) => {
         if (!window.confirm("Delete this address?")) return;
         await fetch(`http://localhost:3000/api/addresses/${id}`, { method: "DELETE" });
         fetchAddresses();
+        toast.success("Address deleted");
     };
 
     const handleEditAddress = (addr) => {
@@ -190,13 +187,12 @@ export default function Profile() {
             });
             const data = await res.json();
             if (data.success) {
-                setPasswordMsg("Password changed successfully");
+                toast.success("Password changed successfully");
                 setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-                setTimeout(() => setPasswordMsg(""), 3000);
             } else {
                 setPasswordErrors({ general: data.message });
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { toast.error("Something went wrong"); }
     };
 
     const handleDeleteAccount = async () => {
@@ -227,12 +223,11 @@ export default function Profile() {
             const data = await res.json();
             if (data.success) {
                 fetchOrders();
+                toast.success("Order cancelled");
             } else {
-                alert(data.message);
+                toast.error(data.message);
             }
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const logout = () => { localStorage.clear(); navigate("/auth"); };
@@ -247,7 +242,6 @@ export default function Profile() {
     const tabs = [
         { key: "personal", label: "Personal details" },
         { key: "orders", label: "Orders" },
-        { key: "wishlist", label: "Wishlist" },
         { key: "address", label: "Address" },
         { key: "settings", label: "Settings" },
     ];
@@ -259,14 +253,17 @@ export default function Profile() {
                 <div className="profile-wrapper">
                     <div className="profile-layout">
 
-                        {/* SIDEBAR */}
                         <aside className="profile-sidebar">
                             <div className="profile-avatar-section">
                                 <div className="profile-avatar">{initials(profile.fullName || userName)}</div>
                                 <p className="profile-display-name">{profile.fullName || userName}</p>
                                 <p className="profile-email">{userEmail}</p>
+                                {skinType && (
+                                    <span className="profile-skin-badge">
+                                        {skinTypeLabels[skinType]}
+                                    </span>
+                                )}
                             </div>
-
                             <nav className="profile-nav">
                                 {tabs.map(tab => (
                                     <button
@@ -281,7 +278,6 @@ export default function Profile() {
                             </nav>
                         </aside>
 
-                        {/* MAIN */}
                         <main className="profile-main">
 
                             {/* PERSONAL DETAILS */}
@@ -327,7 +323,7 @@ export default function Profile() {
                                                     type="text"
                                                     value={profile.city}
                                                     onChange={e => setProfile({ ...profile, city: e.target.value })}
-                                                    placeholder="Pokhara"
+                                                    placeholder="Kathmandu"
                                                 />
                                             </div>
                                         </div>
@@ -342,10 +338,7 @@ export default function Profile() {
                                             </div>
                                             <div className="form-group">
                                                 <label>Gender</label>
-                                                <select
-                                                    value={profile.gender}
-                                                    onChange={e => setProfile({ ...profile, gender: e.target.value })}
-                                                >
+                                                <select value={profile.gender} onChange={e => setProfile({ ...profile, gender: e.target.value })}>
                                                     <option value="">Prefer not to say</option>
                                                     <option value="Male">Male</option>
                                                     <option value="Female">Female</option>
@@ -353,8 +346,30 @@ export default function Profile() {
                                                 </select>
                                             </div>
                                         </div>
+
+                                        {/* SKIN TYPE */}
+                                        <div className="skin-type-section">
+                                            <div className="skin-type-row">
+                                                <div>
+                                                    <p className="skin-type-title">Your skin type</p>
+                                                    <p className="skin-type-hint">This helps us personalize your product recommendations</p>
+                                                </div>
+                                                {skinType ? (
+                                                    <div className="skin-type-result">
+                                                        <span className="skin-type-value">{skinTypeLabels[skinType]}</span>
+                                                        <button className="skin-type-retake" onClick={() => navigate('/quiz')}>
+                                                            Retake Quiz
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button className="skin-type-retake" onClick={() => navigate('/quiz')}>
+                                                        Take the Quiz
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         {profileErrors.general && <p className="field-error">{profileErrors.general}</p>}
-                                        {profileMsg && <p className="field-success">{profileMsg}</p>}
                                         <button className="btn-profile-save" onClick={handleProfileSave}>Save changes</button>
                                     </div>
                                 </div>
@@ -414,31 +429,6 @@ export default function Profile() {
                                 </div>
                             )}
 
-                            {/* WISHLIST */}
-                            {activeTab === "wishlist" && (
-                                <div className="profile-section">
-                                    <h2>My wishlist</h2>
-                                    {wishlistLoading ? <p>Loading...</p> : wishlistItems.length === 0 ? (
-                                        <div className="profile-empty">
-                                            <p>Your wishlist is empty</p>
-                                            <button className="btn-profile-save" onClick={() => navigate("/products")}>Explore Products</button>
-                                        </div>
-                                    ) : (
-                                        <div className="profile-wishlist-grid">
-                                            {wishlistItems.map(product => (
-                                                <div key={product._id} className="profile-wishlist-card" onClick={() => navigate(`/product/${product._id}`)}>
-                                                    <div className="profile-wishlist-img">
-                                                        {product.imageUrl && <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />}
-                                                    </div>
-                                                    <p className="profile-wishlist-name">{product.name}</p>
-                                                    <p className="profile-wishlist-price">Rs. {product.price.toLocaleString()}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
                             {/* ADDRESS */}
                             {activeTab === "address" && (
                                 <div className="profile-section">
@@ -448,7 +438,6 @@ export default function Profile() {
                                             + Add Address
                                         </button>
                                     </div>
-
                                     {showAddressForm && (
                                         <div className="address-form-card">
                                             <h3>{editingAddress ? "Edit address" : "New address"}</h3>
@@ -502,7 +491,6 @@ export default function Profile() {
                                             </div>
                                         </div>
                                     )}
-
                                     <div className="address-list">
                                         {addresses.length === 0 && !showAddressForm && (
                                             <p style={{ color: '#888', fontSize: '14px' }}>No saved addresses yet.</p>
@@ -530,8 +518,6 @@ export default function Profile() {
                             {activeTab === "settings" && (
                                 <div className="profile-section">
                                     <h2>Settings</h2>
-
-                                    {/* Change Password */}
                                     <div className="settings-block">
                                         <h3>Change password</h3>
                                         <div className="profile-form">
@@ -553,12 +539,9 @@ export default function Profile() {
                                                 </div>
                                             </div>
                                             {passwordErrors.general && <p className="field-error">{passwordErrors.general}</p>}
-                                            {passwordMsg && <p className="field-success">{passwordMsg}</p>}
                                             <button className="btn-profile-save" onClick={handleChangePassword}>Update password</button>
                                         </div>
                                     </div>
-
-                                    {/* Delete Account */}
                                     <div className="settings-block danger-block">
                                         <h3>Delete account</h3>
                                         <p className="danger-text">Your account will be scheduled for permanent deletion after 30 days. This action cannot be undone.</p>
@@ -577,10 +560,19 @@ export default function Profile() {
                                                 </div>
                                             </div>
                                         )}
+                                        <h3>Appearance</h3>
+                                        <div className="theme-setting-row">
+                                            <div>
+                                                <p className="skin-type-title">Theme</p>
+                                                <p className="skin-type-hint">Switch between light and dark mode</p>
+                                            </div>
+                                            <button className="theme-toggle-btn" onClick={toggleTheme}>
+                                                {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
-
                         </main>
                     </div>
                 </div>
@@ -588,4 +580,4 @@ export default function Profile() {
             <Footer />
         </>
     );
-}   
+}

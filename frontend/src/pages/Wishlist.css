@@ -1,6 +1,6 @@
 .wishlist-page {
     padding: 100px 4rem 60px;
-    background: #fafafa;
+    background: var(--bg-secondary);
     min-height: 100vh;
 }
 
@@ -12,17 +12,18 @@
 .wishlist-header {
     margin-bottom: 28px;
     padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .wishlist-header h1 {
     font-size: 32px;
     font-weight: 600;
     margin-bottom: 4px;
+    color: var(--text-primary);
 }
 
 .wishlist-header p {
-    color: #888;
+    color: var(--text-muted);
     font-size: 14px;
 }
 
@@ -38,9 +39,9 @@
     align-items: center;
     gap: 24px;
     padding: 20px 24px;
-    background: white;
+    background: var(--bg-card);
     border-radius: 14px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-light);
     transition: box-shadow 0.2s ease;
 }
 
@@ -52,7 +53,7 @@
     width: 110px;
     height: 110px;
     border-radius: 10px;
-    background: #f2f2f2;
+    background: var(--bg-subtle);
     cursor: pointer;
     overflow: hidden;
     transition: opacity 0.2s;
@@ -73,33 +74,32 @@
     font-weight: 600;
     cursor: pointer;
     margin-bottom: 5px;
+    color: var(--text-primary);
 }
 
 .wishlist-item-details h3:hover { text-decoration: underline; }
 
 .wishlist-item-meta {
     font-size: 13px;
-    color: #888;
+    color: var(--text-muted);
     margin-bottom: 5px;
 }
 
 .wishlist-item-price {
     font-size: 15px;
-    color: #555;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
 .wishlist-item-actions { flex-shrink: 0; }
 
-.wishlist-cart-btn {
-    white-space: nowrap;
-}
+.wishlist-cart-btn { white-space: nowrap; }
 
 .delete-btn {
     background: none;
     border: none;
     font-size: 18px;
-    color: #bbb;
+    color: var(--text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -119,5 +119,5 @@
     justify-content: center;
 }
 
-.empty-wishlist h2 { font-size: 22px; margin-bottom: 8px; }
-.empty-wishlist p { color: #777; margin-bottom: 24px; font-size: 15px; }
+.empty-wishlist h2 { font-size: 22px; margin-bottom: 8px; color: var(--text-primary); }
+.empty-wishlist p { color: var(--text-muted); margin-bottom: 24px; font-size: 15px; }

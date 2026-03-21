@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUsers, FiPackage, FiShoppingCart, FiHeart, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut } from "react-icons/fi";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut } from "react-icons/fi";
+import toast from "react-hot-toast";
 import "./AdminDashboard.css";
 
 export default function AdminDashboard() {
@@ -10,6 +12,7 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [analytics, setAnalytics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showProductModal, setShowProductModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
@@ -24,13 +27,7 @@ export default function AdminDashboard() {
     });
 
     const statusColor = (status) => {
-        const colors = {
-            Pending: '#f0a500',
-            Processing: '#3b82f6',
-            Shipped: '#8b5cf6',
-            Delivered: '#22c55e',
-            Cancelled: '#ef4444'
-        };
+        const colors = { Pending: '#f0a500', Processing: '#3b82f6', Shipped: '#8b5cf6', Delivered: '#22c55e', Cancelled: '#ef4444' };
         return colors[status] || '#888';
     };
 
@@ -40,7 +37,7 @@ export default function AdminDashboard() {
         if (!token || role !== "admin") navigate("/auth");
     }, []);
 
-    useEffect(() => { fetchStats(); }, []);
+    useEffect(() => { fetchStats(); fetchAnalytics(); }, []);
     useEffect(() => { if (activeTab === "users") fetchUsers(); }, [activeTab]);
     useEffect(() => { if (activeTab === "products") fetchProducts(); }, [activeTab]);
     useEffect(() => { if (activeTab === "orders") fetchOrders(); }, [activeTab]);
@@ -50,11 +47,16 @@ export default function AdminDashboard() {
             const res = await fetch("http://localhost:3000/api/admin/stats", { headers: getHeaders() });
             const data = await res.json();
             setStats(data.stats || {});
-        } catch (err) {
-            console.error("Stats error:", err);
-        } finally {
-            setLoading(false);
-        }
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    const fetchAnalytics = async () => {
+        try {
+            const res = await fetch("http://localhost:3000/api/admin/analytics", { headers: getHeaders() });
+            const data = await res.json();
+            setAnalytics(data.analytics || []);
+        } catch (err) { console.error(err); }
     };
 
     const fetchUsers = async () => {
@@ -62,9 +64,7 @@ export default function AdminDashboard() {
             const res = await fetch("http://localhost:3000/api/admin/users", { headers: getHeaders() });
             const data = await res.json();
             setUsers(data.users || []);
-        } catch (err) {
-            console.error("Users error:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const fetchProducts = async () => {
@@ -72,9 +72,7 @@ export default function AdminDashboard() {
             const res = await fetch("http://localhost:3000/api/admin/products", { headers: getHeaders() });
             const data = await res.json();
             setProducts(data.products || []);
-        } catch (err) {
-            console.error("Products error:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const fetchOrders = async () => {
@@ -82,9 +80,7 @@ export default function AdminDashboard() {
             const res = await fetch("http://localhost:3000/api/orders/all", { headers: getHeaders() });
             const data = await res.json();
             setOrders(data.orders || []);
-        } catch (err) {
-            console.error("Orders error:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const deleteUser = async (id) => {
@@ -92,6 +88,7 @@ export default function AdminDashboard() {
         await fetch(`http://localhost:3000/api/admin/users/${id}`, { method: "DELETE", headers: getHeaders() });
         fetchUsers();
         fetchStats();
+        toast.success("User deleted");
     };
 
     const deleteProduct = async (id) => {
@@ -99,6 +96,7 @@ export default function AdminDashboard() {
         await fetch(`http://localhost:3000/api/admin/products/${id}`, { method: "DELETE", headers: getHeaders() });
         fetchProducts();
         fetchStats();
+        toast.success("Product deleted");
     };
 
     const updateOrderStatus = async (id, status) => {
@@ -109,6 +107,7 @@ export default function AdminDashboard() {
         });
         fetchOrders();
         fetchStats();
+        toast.success(`Order marked as ${status}`);
     };
 
     const deleteOrder = async (id) => {
@@ -116,6 +115,7 @@ export default function AdminDashboard() {
         await fetch(`http://localhost:3000/api/orders/${id}`, { method: "DELETE", headers: getHeaders() });
         fetchOrders();
         fetchStats();
+        toast.success("Order deleted");
     };
 
     const openAddProduct = () => {
@@ -127,12 +127,9 @@ export default function AdminDashboard() {
     const openEditProduct = (product) => {
         setEditingProduct(product);
         setProductForm({
-            name: product.name,
-            price: product.price,
-            category: product.category || "",
-            description: product.description || "",
-            skinTypes: (product.skinTypes || []).join(", "),
-            imageUrl: product.imageUrl || ""
+            name: product.name, price: product.price,
+            category: product.category || "", description: product.description || "",
+            skinTypes: (product.skinTypes || []).join(", "), imageUrl: product.imageUrl || ""
         });
         setShowProductModal(true);
     };
@@ -152,12 +149,12 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (data.success) {
                 setProductForm(prev => ({ ...prev, imageUrl: data.imageUrl }));
+                toast.success("Image uploaded");
             } else {
-                alert('Image upload failed: ' + data.message);
+                toast.error("Image upload failed");
             }
         } catch (err) {
-            alert('Image upload error');
-            console.error(err);
+            toast.error("Image upload error");
         } finally {
             setUploadingImage(false);
         }
@@ -177,19 +174,33 @@ export default function AdminDashboard() {
         setShowProductModal(false);
         fetchProducts();
         fetchStats();
+        toast.success(editingProduct ? "Product updated" : "Product added");
     };
 
-    const logout = () => {
-        localStorage.clear();
-        navigate("/auth");
-    };
+    const logout = () => { localStorage.clear(); navigate("/auth"); };
 
     const statCards = [
-        { label: "Total Users", value: stats.totalUsers, icon: <FiUsers /> },
-        { label: "Total Products", value: stats.totalProducts, icon: <FiPackage /> },
-        { label: "Total Orders", value: stats.totalOrders, icon: <FiShoppingCart /> },
-        { label: "Pending Orders", value: stats.pendingOrders, icon: <FiHeart /> },
+        { label: "Total Users", value: stats.totalUsers, icon: <FiUsers />, tab: "users" },
+        { label: "Total Products", value: stats.totalProducts, icon: <FiPackage />, tab: "products" },
+        { label: "Total Orders", value: stats.totalOrders, icon: <FiShoppingCart />, tab: "orders" },
+        { label: "Pending Orders", value: stats.pendingOrders, icon: <FiClock />, tab: "orders" },
     ];
+
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div style={{ background: 'white', border: '1px solid #eee', borderRadius: '10px', padding: '12px 16px', fontSize: '13px' }}>
+                    <p style={{ fontWeight: 600, marginBottom: '6px', color: '#3a2e28' }}>{label}</p>
+                    {payload.map((p, i) => (
+                        <p key={i} style={{ color: p.color, margin: '2px 0' }}>
+                            {p.name === 'revenue' ? `Revenue: Rs. ${p.value.toLocaleString()}` : `Orders: ${p.value}`}
+                        </p>
+                    ))}
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <div className="admin-layout">
@@ -226,17 +237,42 @@ export default function AdminDashboard() {
 
                 {/* OVERVIEW */}
                 {activeTab === "overview" && (
-                    <div className="admin-stats-grid">
-                        {statCards.map((card) => (
-                            <div key={card.label} className="stat-card">
-                                <div className="stat-icon">{card.icon}</div>
-                                <div>
-                                    <p className="stat-value">{loading ? "..." : card.value}</p>
-                                    <p className="stat-label">{card.label}</p>
+                    <>
+                        <div className="admin-stats-grid">
+                            {statCards.map((card) => (
+                                <div
+                                    key={card.label}
+                                    className="stat-card stat-card-clickable"
+                                    onClick={() => setActiveTab(card.tab)}
+                                    title={`Go to ${card.tab}`}
+                                >
+                                    <div className="stat-icon">{card.icon}</div>
+                                    <div>
+                                        <p className="stat-value">{loading ? "..." : card.value}</p>
+                                        <p className="stat-label">{card.label}</p>
+                                    </div>
+                                    <span className="stat-arrow">→</span>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+
+                        {/* ANALYTICS CHART */}
+                        <div className="analytics-card">
+                            <h2 className="analytics-title">Revenue & Orders — Last 7 Days</h2>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={analytics} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0ebe6" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9a8880' }} axisLine={false} tickLine={false} />
+                                    <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#9a8880' }} axisLine={false} tickLine={false} />
+                                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: '#9a8880' }} axisLine={false} tickLine={false} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '16px' }} />
+                                    <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#6b5d52" strokeWidth={2.5} dot={{ fill: '#6b5d52', r: 4 }} activeDot={{ r: 6 }} name="revenue" />
+                                    <Line yAxisId="right" type="monotone" dataKey="orders" stroke="#c8956c" strokeWidth={2.5} dot={{ fill: '#c8956c', r: 4 }} activeDot={{ r: 6 }} name="orders" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </>
                 )}
 
                 {/* ORDERS */}
@@ -360,7 +396,6 @@ export default function AdminDashboard() {
                 )}
             </main>
 
-            {/* Product Modal */}
             {showProductModal && (
                 <div className="modal-overlay">
                     <div className="modal">
@@ -392,27 +427,15 @@ export default function AdminDashboard() {
                             </div>
                             <div className="form-group">
                                 <label>Product Image</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                />
-                                {uploadingImage && (
-                                    <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>
-                                )}
+                                <input type="file" accept="image/*" onChange={handleImageChange} />
+                                {uploadingImage && <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>}
                                 {productForm.imageUrl && (
-                                    <img
-                                        src={productForm.imageUrl}
-                                        alt="Preview"
-                                        style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }}
-                                    />
+                                    <img src={productForm.imageUrl} alt="Preview" style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
                                 )}
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn-modal-cancel" onClick={() => setShowProductModal(false)}>
-                                Cancel
-                            </button>
+                            <button className="btn-modal-cancel" onClick={() => setShowProductModal(false)}>Cancel</button>
                             <button className="btn-modal-save" onClick={saveProduct} disabled={uploadingImage}>
                                 {editingProduct ? "Save Changes" : "Add Product"}
                             </button>

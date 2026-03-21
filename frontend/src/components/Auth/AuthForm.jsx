@@ -107,11 +107,21 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                 localStorage.setItem("name", result.name);
                 localStorage.setItem("email", result.email);
                 localStorage.setItem("role", result.role);
+
+                const sessionSkinType = sessionStorage.getItem('skinType');
+                if (sessionSkinType) {
+                    fetch('http://localhost:3000/api/profile/skin-type', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userEmail: result.email, skinType: sessionSkinType })
+                    }).then(() => sessionStorage.removeItem('skinType'));
+                }
+
                 window.location.href = result.role === 'admin' ? '/admin' : '/';
+
             } else {
                 const signedUpEmail = formData.email;
                 toggleAuth();
-                // email carries over to login, everything else cleared by useEffect
                 setFormData(prev => ({ ...prev, email: signedUpEmail }));
             }
 

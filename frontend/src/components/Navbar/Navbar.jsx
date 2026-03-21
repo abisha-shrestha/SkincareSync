@@ -1,7 +1,8 @@
 import "./Navbar.css";
 import { Link, useLocation } from "react-router-dom";
-import { FiSearch, FiShoppingCart, FiHeart, FiUser } from "react-icons/fi";
+import { FiSearch, FiShoppingCart, FiHeart, FiUser, FiSun, FiMoon } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import { useTheme } from "../../ThemeContext";
 
 export default function Navbar() {
     const [cartCount, setCartCount] = useState(0);
@@ -9,6 +10,7 @@ export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const userEmail = localStorage.getItem('email') || 'guest';
     const location = useLocation();
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -42,10 +44,7 @@ export default function Navbar() {
     return (
         <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
             <div className="navbar-inner">
-
-                <Link to="/" className="nav-brand">
-                    SkincareSync
-                </Link>
+                <Link to="/" className="nav-brand">SkincareSync</Link>
 
                 <ul className="nav-links">
                     <li><Link to="/products" className={isActive('/products') ? 'active' : ''}>Products</Link></li>
@@ -67,8 +66,10 @@ export default function Navbar() {
                     <Link to="/profile" className="nav-icon-btn" aria-label="Profile">
                         <FiUser />
                     </Link>
+                    <button onClick={toggleTheme} className="nav-icon-btn">
+                        {theme === "light" ? <FiMoon /> : <FiSun />}
+                    </button>
                 </div>
-
             </div>
         </nav>
     );

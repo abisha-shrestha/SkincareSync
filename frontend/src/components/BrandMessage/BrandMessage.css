@@ -1,31 +1,98 @@
 .brand-message {
-  width: 100%;
-  padding: 120px 20px;
-  text-align: center;
-  background: #ffffff;
+    background: var(--bg-primary);
+    padding: 120px 6rem;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
 }
 
-.brand-message .label {
-  font-size: 22px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #6b5d52;
-  margin-bottom: 18px;
-  font-weight: 600;
+.brand-message-inner {
+    max-width: 1300px;
+    margin: 0 auto;
 }
 
-.brand-message h2 {
-  font-size: 44px;
-  font-weight: 600;
-  color: #6b5d52;
-  margin-bottom: 22px;
-  line-height: 1.25;
+.brand-message-header {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 72px;
 }
 
-.brand-message .desc {
-  max-width: 720px;
-  margin: 0 auto;
-  font-size: 19px;
-  line-height: 1.7;
-  color: #4a4a4a;
+.brand-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--accent-light);
+}
+
+.brand-title {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    letter-spacing: -1px;
+    margin-bottom: 18px;
+    font-family: Georgia, serif;
+}
+
+.brand-desc {
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--text-muted);
+}
+
+.brand-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.brand-step {
+    padding: 36px 32px;
+    background: var(--bg-subtle);
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+.brand-step:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.brand-step-number {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-family: Georgia, serif;
+}
+
+.brand-step-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+}
+
+.brand-step-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+    .brand-message { padding: 80px 2rem; }
+    .brand-steps { grid-template-columns: 1fr; }
+    .brand-title { font-size: 32px; }
 }

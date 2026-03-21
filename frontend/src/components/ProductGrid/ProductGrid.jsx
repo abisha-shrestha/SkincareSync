@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ProductGrid.css";
 
-export default function ProductGrid({ limit }) {
+export default function ProductGrid({ limit, skinTypeFilter }) {
     const navigate = useNavigate();
     const [allProducts, setAllProducts] = useState([]);
     const [activeCategory, setActiveCategory] = useState("All");
@@ -21,17 +21,22 @@ export default function ProductGrid({ limit }) {
             });
     }, []);
 
-    const filteredProducts = activeCategory === "All"
-        ? allProducts
-        : allProducts.filter(product => product.category === activeCategory);
+    // Apply skin type filter first, then category filter on top
+    const skinFiltered = skinTypeFilter
+        ? allProducts.filter(product =>
+            product.skinTypes && product.skinTypes.some(t =>
+                t.toLowerCase() === skinTypeFilter.toLowerCase()
+            )
+        )
+        : allProducts;
 
-    const displayedProducts = limit ? filteredProducts.slice(0, limit) : filteredProducts;
+    const categoryFiltered = activeCategory === "All"
+        ? skinFiltered
+        : skinFiltered.filter(product => product.category === activeCategory);
 
-    const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`);
-    };
+    const displayedProducts = limit ? categoryFiltered.slice(0, limit) : categoryFiltered;
 
-    if (loading) return <div>Loading products...</div>;
+    if (loading) return <div style={{ padding: '60px', textAlign: 'center', color: '#9a8880' }}>Loading products...</div>;
 
     return (
         <>
@@ -49,12 +54,19 @@ export default function ProductGrid({ limit }) {
                 </div>
             )}
 
+            {!loading && displayedProducts.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '60px', color: '#9a8880' }}>
+                    <p style={{ fontSize: '16px', marginBottom: '8px' }}>No products found for your skin type in this category.</p>
+                    <p style={{ fontSize: '14px' }}>Try switching the category or clearing the skin type filter.</p>
+                </div>
+            )}
+
             <div className="products-grid">
                 {displayedProducts.map(product => (
                     <div
                         key={product._id}
                         className="product-card"
-                        onClick={() => handleProductClick(product._id)}
+                        onClick={() => navigate(`/product/${product._id}`)}
                         style={{ cursor: 'pointer' }}
                     >
                         <div className="product-image">

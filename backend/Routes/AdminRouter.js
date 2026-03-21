@@ -1,10 +1,7 @@
 const router = require('express').Router();
 const adminOnly = require('../Middlewares/AdminMiddleware');
-const {
-    getStats,
-    getUsers, deleteUser,
-    getProducts, createProduct, updateProduct, deleteProduct
-} = require('../Controllers/AdminController');
+const { getStats, getUsers, deleteUser, getProducts, createProduct, updateProduct, deleteProduct, getAnalytics } = require('../Controllers/AdminController');
+router.get('/analytics', getAnalytics);
 
 router.use(adminOnly); // all routes below are admin-protected
 
