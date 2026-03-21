@@ -220,14 +220,19 @@ export default function Profile() {
     const handleCancelOrder = async (orderId) => {
         if (!window.confirm("Cancel this order?")) return;
         try {
-            const res = await fetch(`http://localhost:3000/api/orders/${orderId}/status`, {
+            const res = await fetch(`http://localhost:3000/api/orders/${orderId}/cancel`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: "Cancelled" })
+                headers: { "Content-Type": "application/json" }
             });
             const data = await res.json();
-            if (data.success) fetchOrders();
-        } catch (err) { console.error(err); }
+            if (data.success) {
+                fetchOrders();
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const logout = () => { localStorage.clear(); navigate("/auth"); };

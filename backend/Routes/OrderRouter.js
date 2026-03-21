@@ -4,6 +4,7 @@ const {
     getUserOrders,
     getAllOrders,
     updateOrderStatus,
+    cancelOrder,
     deleteOrder
 } = require('../Controllers/OrderController');
 const adminOnly = require('../Middlewares/AdminMiddleware');
@@ -12,6 +13,7 @@ router.post('/', placeOrder);
 router.get('/', getUserOrders);
 router.get('/all', adminOnly, getAllOrders);
 router.put('/:id/status', adminOnly, updateOrderStatus);
+router.put('/:id/cancel', cancelOrder);
 router.delete('/:id', adminOnly, deleteOrder);
 
 module.exports = router;

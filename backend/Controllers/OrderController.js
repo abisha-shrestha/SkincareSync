@@ -77,6 +77,25 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
+const cancelOrder = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        if (!['Pending', 'Processing'].includes(order.status)) {
+            return res.status(400).json({ success: false, message: 'Order cannot be cancelled at this stage' });
+        }
+
+        order.status = 'Cancelled';
+        await order.save();
+
+        res.json({ success: true, order });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+
 const deleteOrder = async (req, res) => {
     try {
         await Order.findByIdAndDelete(req.params.id);
@@ -86,4 +105,4 @@ const deleteOrder = async (req, res) => {
     }
 };
 
-module.exports = { placeOrder, getUserOrders, getAllOrders, updateOrderStatus, deleteOrder };
+module.exports = { placeOrder, getUserOrders, getAllOrders, updateOrderStatus, deleteOrder, cancelOrder };
