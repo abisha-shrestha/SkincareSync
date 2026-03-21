@@ -1,170 +1,11 @@
-// import { useState, useEffect } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
-// import Navbar from "../components/Navbar/Navbar";
-// import Footer from "../components/Footer/Footer";
-// import "./ProductDetail.css";
-
-// export default function ProductDetail() {
-//     const { id } = useParams();
-//     const navigate = useNavigate();
-//     const [product, setProduct] = useState(null);
-//     const [quantity, setQuantity] = useState(1);
-//     const [loading, setLoading] = useState(true);
-//     const [wishlisted, setWishlisted] = useState(false);
-//     const userEmail = localStorage.getItem('email') || 'guest';
-
-//     // Fetch product
-//     useEffect(() => {
-//         fetch(`http://localhost:3000/api/products/${id}`)
-//             .then(res => res.json())
-//             .then(data => {
-//                 if (data.success && data.product) {
-//                     setProduct(data.product);
-//                 } else {
-//                     navigate("/products");
-//                 }
-//             })
-//             .catch(() => navigate("/products"))
-//             .finally(() => setLoading(false));
-//     }, [id, navigate]);
-
-//     // Check if already wishlisted once product loads
-//     useEffect(() => {
-//         if (!product) return;
-//         fetch(`http://localhost:3000/api/wishlist?userEmail=${userEmail}`)
-//             .then(res => res.json())
-//             .then(data => {
-//                 const items = data.wishlist?.items || [];
-//                 setWishlisted(items.some(item => (item._id || item).toString() === product._id));
-//             })
-//             .catch(() => {});
-//     }, [product]);
-
-//     const incrementQuantity = () => setQuantity(q => q + 1);
-//     const decrementQuantity = () => setQuantity(q => Math.max(1, q - 1));
-
-//     const toggleWishlist = async () => {
-//         try {
-//             const res = await fetch('http://localhost:3000/api/wishlist', {
-//                 method: 'POST',
-//                 headers: { 'Content-Type': 'application/json' },
-//                 body: JSON.stringify({ userEmail, productId: product._id })
-//             });
-//             const data = await res.json();
-//             setWishlisted(data.wishlisted);
-//         } catch (err) {
-//             console.error('Wishlist error:', err);
-//         }
-//     };
-
-//     const addToCart = async () => {
-//         try {
-//             await fetch('http://localhost:3000/api/cart', {
-//                 method: 'POST',
-//                 headers: { 'Content-Type': 'application/json' },
-//                 body: JSON.stringify({
-//                     userEmail,
-//                     productId: product._id,
-//                     quantity,
-//                     price: product.price
-//                 })
-//             });
-//             alert(`Added ${quantity} of ${product.name} to cart!`);
-//         } catch (err) {
-//             alert('Cart error');
-//         }
-//     };
-
-//     const buyNow = () => alert("Redirecting to checkout...");
-
-//     if (loading) return <div className="loading">Loading product...</div>;
-//     if (!product) return <div>Product not found</div>;
-
-//     return (
-//         <>
-//             <Navbar />
-//             <section className="product-detail-page">
-//                 <div className="product-detail-container">
-
-//                     {/* Image Section */}
-//                     <div className="product-image-section">
-//                         <div className="product-image-placeholder">
-//                             <img
-//                                 src={product.imageUrl || product.image || "/api/products/default.jpg"}
-//                                 alt={product.name}
-//                                 className="product-main-image"
-//                             />
-//                         </div>
-//                     </div>
-
-//                     {/* Details Section */}
-//                     <div className="product-details-section">
-//                         <div className="product-header">
-//                             <h1 className="product-name">{product.name}</h1>
-//                             <p className="product-price-large">
-//                                 Rs. {product.price.toLocaleString()}
-//                             </p>
-
-//                             <button
-//                                 className={`wishlist-btn ${wishlisted ? 'active' : ''}`}
-//                                 onClick={toggleWishlist}
-//                                 title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-//                             >
-//                                 {wishlisted ? '❤️' : '🤍'}
-//                             </button>
-//                         </div>
-
-//                         <div className="quantity-selector">
-//                             <label>Quantity</label>
-//                             <div className="quantity-controls">
-//                                 <button onClick={decrementQuantity}>-</button>
-//                                 <span>{quantity}</span>
-//                                 <button onClick={incrementQuantity}>+</button>
-//                             </div>
-//                         </div>
-
-//                         <div className="product-actions">
-//                             <button className="btn btn-cta buy-now-btn" onClick={buyNow}>
-//                                 Buy Now
-//                             </button>
-//                             <button className="btn btn-soft add-cart-btn" onClick={addToCart}>
-//                                 Add to Cart
-//                             </button>
-//                         </div>
-
-//                         {product.skinTypes && (
-//                             <div className="skin-types-section">
-//                                 <h3>Best for skin types:</h3>
-//                                 <div className="skin-type-tags">
-//                                     {product.skinTypes.map((type, index) => (
-//                                         <span key={index} className="skin-type-tag">
-//                                             {type}
-//                                         </span>
-//                                     ))}
-//                                 </div>
-//                             </div>
-//                         )}
-//                     </div>
-
-//                 </div>
-//             </section>
-//             <Footer />
-//         </>
-//     );
-// }
-
-
-
-
-
-
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiShoppingCart} from "react-icons/fi";
+import toast from "react-hot-toast";
 import "./ProductDetail.css";
+
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -173,6 +14,7 @@ export default function ProductDetail() {
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(true);
     const [wishlisted, setWishlisted] = useState(false);
+    const [addingToCart, setAddingToCart] = useState(false);
     const userEmail = localStorage.getItem('email') || 'guest';
 
     useEffect(() => {
@@ -212,12 +54,40 @@ export default function ProductDetail() {
             });
             const data = await res.json();
             setWishlisted(data.wishlisted);
+            toast.success(data.wishlisted ? "Added to wishlist" : "Removed from wishlist");
         } catch (err) {
-            console.error('Wishlist error:', err);
+            toast.error("Something went wrong");
         }
     };
 
     const addToCart = async () => {
+        setAddingToCart(true);
+        try {
+            const res = await fetch('http://localhost:3000/api/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userEmail,
+                    productId: product._id,
+                    quantity,
+                    price: product.price
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success(`${product.name} added to cart`);
+            } else {
+                toast.error("Failed to add to cart");
+            }
+        } catch (err) {
+            toast.error("Something went wrong");
+        } finally {
+            setAddingToCart(false);
+        }
+    };
+
+    const buyNow = async () => {
+        setAddingToCart(true);
         try {
             await fetch('http://localhost:3000/api/cart', {
                 method: 'POST',
@@ -229,16 +99,27 @@ export default function ProductDetail() {
                     price: product.price
                 })
             });
-            alert(`Added ${quantity} of ${product.name} to cart!`);
+            navigate("/checkout");
         } catch (err) {
-            alert('Cart error');
+            toast.error("Something went wrong");
+        } finally {
+            setAddingToCart(false);
         }
     };
 
-    const buyNow = () => alert("Redirecting to checkout...");
+    if (loading) {
+        return (
+            <>
+                <Navbar />
+                <div className="product-detail-loading">
+                    <div className="product-detail-spinner" />
+                </div>
+                <Footer />
+            </>
+        );
+    }
 
-    if (loading) return <div className="loading">Loading product...</div>;
-    if (!product) return <div>Product not found</div>;
+    if (!product) return null;
 
     return (
         <>
@@ -246,60 +127,73 @@ export default function ProductDetail() {
             <section className="product-detail-page">
                 <div className="product-detail-container">
 
+                    {/* Image */}
                     <div className="product-image-section">
-                        <div className="product-image-placeholder">
-                            <img
-                                src={product.imageUrl || product.image || "/api/products/default.jpg"}
-                                alt={product.name}
-                                className="product-main-image"
-                            />
-                        </div>
+                        <img
+                            src={product.imageUrl || product.image || "/api/products/default.jpg"}
+                            alt={product.name}
+                            className="product-main-image"
+                        />
                     </div>
 
+                    {/* Details */}
                     <div className="product-details-section">
                         <div className="product-header">
+                            <p className="product-category">{product.category}</p>
                             <h1 className="product-name">{product.name}</h1>
                             <p className="product-price-large">
                                 Rs. {product.price.toLocaleString()}
                             </p>
-
                             <button
-                                className="wishlist-btn"
+                                className={`wishlist-btn ${wishlisted ? 'active' : ''}`}
                                 onClick={toggleWishlist}
                                 title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
                             >
                                 <FiHeart
                                     style={{
-                                        fill: wishlisted ? '#8B5E3C' : 'none',
-                                        color: wishlisted ? '#8B5E3C' : '#999',
-                                        fontSize: '22px',
+                                        fill: wishlisted ? 'var(--accent)' : 'none',
+                                        color: wishlisted ? 'var(--accent)' : 'var(--text-muted)',
+                                        fontSize: '20px',
                                         transition: 'all 0.2s ease'
                                     }}
                                 />
                             </button>
                         </div>
 
+                        {product.description && (
+                            <p className="product-description">{product.description}</p>
+                        )}
+
                         <div className="quantity-selector">
                             <label>Quantity</label>
                             <div className="quantity-controls">
-                                <button onClick={decrementQuantity}>-</button>
+                                <button onClick={decrementQuantity}>−</button>
                                 <span>{quantity}</span>
                                 <button onClick={incrementQuantity}>+</button>
                             </div>
                         </div>
 
                         <div className="product-actions">
-                            <button className="btn btn-cta buy-now-btn" onClick={buyNow}>
+                            <button
+                                className="product-btn-buynow"
+                                onClick={buyNow}
+                                disabled={addingToCart}
+                            >
                                 Buy Now
                             </button>
-                            <button className="btn btn-soft add-cart-btn" onClick={addToCart}>
+                            <button
+                                className="product-btn-addcart"
+                                onClick={addToCart}
+                                disabled={addingToCart}
+                            >
+                                <FiShoppingCart />
                                 Add to Cart
                             </button>
                         </div>
 
-                        {product.skinTypes && (
+                        {product.skinTypes && product.skinTypes.length > 0 && (
                             <div className="skin-types-section">
-                                <h3>Best for skin types:</h3>
+                                <h3>Best for skin types</h3>
                                 <div className="skin-type-tags">
                                     {product.skinTypes.map((type, index) => (
                                         <span key={index} className="skin-type-tag">{type}</span>

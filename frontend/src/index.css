@@ -34,36 +34,36 @@
    CSS VARIABLES — DARK MODE
    ============================================ */
 [data-theme="dark"] {
-    --bg-primary: #1a1614;
-    --bg-secondary: #1e1a17;
-    --bg-card: #252018;
-    --bg-subtle: #2a2420;
-    --bg-cream: #1e1a17;
+    --bg-primary: #332c27;
+    --bg-secondary: #2d2720;
+    --bg-card: #3a322c;
+    --bg-subtle: #403830;
+    --bg-cream: #2d2720;
 
-    --text-primary: #f0e8e3;
-    --text-secondary: #c8b0a0;
-    --text-muted: #8a7a72;
+    --text-primary: #f0e6df;
+    --text-secondary: #c4a898;
+    --text-muted: #8a7568;
 
-    --border: #3a3028;
-    --border-light: #332e2a;
+    --border: #524640;
+    --border-light: #453d37;
 
-    --nav-bg: rgba(26, 22, 20, 0.95);
-    --nav-bg-scrolled: rgba(26, 22, 20, 0.99);
+    --nav-bg: rgba(45, 39, 32, 0.94);
+    --nav-bg-scrolled: rgba(45, 39, 32, 0.99);
 
-    --input-bg: #2e2824;
+    --input-bg: #3a322c;
 
-    --accent: #c8956c;
-    --accent-dark: #a87a58;
-    --accent-light: #3a2e28;
+    --accent: #d4956a;
+    --accent-dark: #b87a52;
+    --accent-light: #4a3528;
 
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 35px 80px rgba(0, 0, 0, 0.6);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.24);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 35px 80px rgba(0, 0, 0, 0.4);
 }
 
 /* ============================================
-   BASE STYLES
+    BASE STYLES
    ============================================ */
 * {
     box-sizing: border-box;
