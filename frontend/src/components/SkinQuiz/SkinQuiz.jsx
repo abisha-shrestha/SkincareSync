@@ -189,14 +189,14 @@ export default function SkinQuiz() {
         }
     };
 
-    const handleAnswer = (option) => {
+    const handleAnswer = async (option) => {
         setSelected(option.text);
-        setTimeout(() => {
+        setTimeout(async () => {
             const newAnswers = [...answers, option];
             if (currentIndex + 1 >= questions.length) {
                 const skinType = calculateSkinType(newAnswers);
                 setResult(skinType);
-                saveSkinType(skinType);
+                await saveSkinType(skinType); // await this
             }
             setAnswers(newAnswers);
             setCurrentIndex(currentIndex + 1);
@@ -265,7 +265,7 @@ export default function SkinQuiz() {
                         <button className="quiz-retake-btn" onClick={handleStartQuiz}>
                             Retake Quiz
                         </button>
-                        <button className="quiz-shop-btn" onClick={() => navigate('/products')}>
+                        <button className="quiz-shop-btn" onClick={() => navigate('/products', { state: { skinType: result || existingSkinType } })}>
                             Shop for my skin type
                         </button>
                     </div>
