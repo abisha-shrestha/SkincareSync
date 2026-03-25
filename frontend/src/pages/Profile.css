@@ -509,3 +509,42 @@
     color: white;
     border-color: var(--accent-dark);
 }
+
+
+
+.diary-condition-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.diary-condition-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.diary-condition-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.diary-condition-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.diary-condition-badge {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-left: auto;
+}
