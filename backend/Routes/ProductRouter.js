@@ -1,9 +1,12 @@
 const router = require('express').Router();
-const Product = require('../Models/Product');  // ADD THIS LINE
-const { getProducts, getProduct } = require('../Controllers/ProductController');
+const Product = require('../Models/Product');
+const { getProducts, getProduct, getRoutine } = require('../Controllers/ProductController');
 
 // Get all products
 router.get('/', getProducts);
+
+// Get recommended routine
+router.get('/routine', getRoutine);
 
 // Get single product
 router.get('/:id', getProduct);

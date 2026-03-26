@@ -23,4 +23,23 @@ const getProduct = async (req, res) => {
     }
 };
 
-module.exports = { getProducts, getProduct };
+
+const getRoutine = async (req, res) => {
+    try {
+        const { skinType } = req.query;
+        const steps = ['Cleanser', 'Toner', 'Hydration'];
+        const routine = await Promise.all(
+            steps.map(category =>
+                Product.findOne({
+                    category,
+                    skinTypes: { $regex: new RegExp(`^${skinType}$`, 'i') }
+                })
+            )
+        );
+        res.json({ success: true, routine });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+module.exports = { getProducts, getProduct, getRoutine };
