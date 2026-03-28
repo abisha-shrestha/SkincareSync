@@ -228,3 +228,15 @@
 }
 
 .auth-toggle span:hover { opacity: 0.75; }
+
+
+.auth-forgot {
+    font-size: 12px;
+    color: var(--accent-dark);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.auth-forgot:hover {
+    text-decoration: underline;
+}
