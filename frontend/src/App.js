@@ -28,7 +28,7 @@ function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/search" element={<div>Search Page</div>} />
+            <Route path="/search" element={<Search />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/checkout" element={<Checkout />} />

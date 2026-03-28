@@ -1,6 +1,6 @@
 .search-page {
     padding: 100px 4rem 80px;
-    background: #fafafa;
+    background: var(--bg-secondary);
     min-height: 100vh;
 }
 
@@ -9,7 +9,6 @@
     margin: 0 auto;
 }
 
-/* SEARCH BAR */
 .search-bar-wrapper {
     position: relative;
     display: flex;
@@ -21,27 +20,31 @@
     position: absolute;
     left: 20px;
     font-size: 20px;
-    color: #9a8880;
+    color: var(--text-muted);
     pointer-events: none;
 }
 
 .search-bar-input {
     width: 100%;
     padding: 18px 52px;
-    border: 1.5px solid #e6e0d9;
+    border: 1.5px solid var(--border);
     border-radius: 16px;
     font-size: 16px;
-    background: white;
-    color: #2d2520;
+    background: var(--bg-card);
+    color: var(--text-primary);
     transition: all 0.2s;
     box-sizing: border-box;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
 }
 
 .search-bar-input:focus {
     outline: none;
-    border-color: #6b5d52;
+    border-color: var(--accent-dark);
     box-shadow: 0 4px 20px rgba(107,93,82,0.12);
+}
+
+.search-bar-input::placeholder {
+    color: var(--text-muted);
 }
 
 .search-clear-btn {
@@ -50,31 +53,29 @@
     background: none;
     border: none;
     font-size: 18px;
-    color: #9a8880;
+    color: var(--text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     transition: color 0.2s;
 }
 
-.search-clear-btn:hover { color: #3a2e28; }
+.search-clear-btn:hover { color: var(--text-primary); }
 
-/* STATUS */
 .search-status {
     text-align: center;
-    color: #9a8880;
+    color: var(--text-muted);
     font-size: 14px;
 }
 
 .search-results-count {
     font-size: 13px;
-    color: #9a8880;
+    color: var(--text-muted);
     margin-bottom: 20px;
     font-weight: 500;
     letter-spacing: 0.3px;
 }
 
-/* EMPTY STATE */
 .search-empty-state {
     text-align: center;
     padding: 60px 0;
@@ -82,14 +83,14 @@
 
 .search-hint {
     font-size: 18px;
-    color: #3a2e28;
+    color: var(--text-primary);
     font-weight: 500;
     margin-bottom: 8px;
 }
 
 .search-sub {
     font-size: 14px;
-    color: #9a8880;
+    color: var(--text-muted);
     margin-bottom: 24px;
 }
 
@@ -104,9 +105,9 @@
 .search-suggestion-chip {
     padding: 8px 18px;
     border-radius: 20px;
-    border: 1.5px solid rgba(107,93,82,0.2);
-    background: white;
-    color: #6b5d52;
+    border: 1.5px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -114,14 +115,14 @@
 }
 
 .search-suggestion-chip:hover {
-    background: #6b5d52;
+    background: var(--accent-dark);
     color: white;
-    border-color: #6b5d52;
+    border-color: var(--accent-dark);
 }
 
 .search-browse-btn {
     padding: 12px 28px;
-    background: #3a2e28;
+    background: var(--accent-dark);
     color: white;
     border: none;
     border-radius: 12px;
@@ -132,11 +133,10 @@
 }
 
 .search-browse-btn:hover {
-    background: #6b5d52;
+    opacity: 0.88;
     transform: translateY(-1px);
 }
 
-/* RESULTS GRID */
 .search-results-grid {
     display: flex;
     flex-direction: column;
@@ -149,16 +149,16 @@
     gap: 18px;
     align-items: center;
     padding: 16px 20px;
-    background: white;
+    background: var(--bg-card);
     border-radius: 14px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .search-result-card:hover {
-    border-color: rgba(107,93,82,0.25);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
     transform: translateX(4px);
 }
 
@@ -166,7 +166,7 @@
     width: 80px;
     height: 80px;
     border-radius: 10px;
-    background: #f5f0eb;
+    background: var(--bg-subtle);
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -180,13 +180,13 @@
 .search-result-name {
     font-size: 15px;
     font-weight: 600;
-    color: #2d2520;
+    color: var(--text-primary);
     margin-bottom: 3px;
 }
 
 .search-result-category {
     font-size: 12px;
-    color: #9a8880;
+    color: var(--text-muted);
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -203,13 +203,17 @@
     font-size: 11px;
     padding: 3px 10px;
     border-radius: 20px;
-    background: #f5ede8;
-    color: #8B5E3C;
+    background: var(--accent-light);
+    color: var(--accent-dark);
     font-weight: 500;
 }
 
 .search-result-price {
     font-size: 14px;
     font-weight: 700;
-    color: #6b5d52;
+    color: var(--accent-dark);
+}
+
+@media (max-width: 768px) {
+    .search-page { padding: 100px 20px 60px; }
 }
