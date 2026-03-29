@@ -1,17 +1,37 @@
 const Order = require('../Models/Order');
 const Cart = require('../Models/Cart');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
+    }
+});
+
+const sendOrderConfirmation = async (userEmail, order) => {
+    const itemRows = order.items.map(item =>
+        `${item.name} x${item.quantity} — Rs. ${(item.price * item.quantity).toLocaleString()}`
+    ).join('\n');
+
+    await transporter.sendMail({
+        from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
+        to: userEmail,
+        subject: `Order Confirmed — #${order._id.toString().slice(-8).toUpperCase()}`,
+        text: `Hi there,\n\nThank you for your order! Here's your summary:\n\nOrder ID: #${order._id.toString().slice(-8).toUpperCase()}\n\n${itemRows}\n\nTotal: Rs. ${order.totalAmount.toLocaleString()}\nPayment: Cash on Delivery\nDelivery to: ${order.deliveryAddress.address}, ${order.deliveryAddress.city}\n\nWe'll notify you once your order is on its way.\n\n- SkincareSync`
+    });
+};
 
 const placeOrder = async (req, res) => {
     try {
         const { userEmail, deliveryAddress } = req.body;
 
-        // Get cart
         const cart = await Cart.findOne({ userId: userEmail }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ success: false, message: 'Cart is empty' });
         }
 
-        // Build order items
         const items = cart.items.map(item => ({
             productId: item.productId._id,
             name: item.productId.name,
@@ -22,7 +42,6 @@ const placeOrder = async (req, res) => {
 
         const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-        // Create order
         const order = new Order({
             userEmail,
             items,
@@ -33,9 +52,10 @@ const placeOrder = async (req, res) => {
 
         await order.save();
 
-        // Clear cart after order
         cart.items = [];
         await cart.save();
+
+        sendOrderConfirmation(userEmail, order).catch(err => console.error('Email failed:', err));
 
         res.status(201).json({ success: true, message: 'Order placed successfully', order });
     } catch (err) {
@@ -94,7 +114,6 @@ const cancelOrder = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
-
 
 const deleteOrder = async (req, res) => {
     try {
