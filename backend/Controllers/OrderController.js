@@ -23,6 +23,27 @@ const sendOrderConfirmation = async (userEmail, order) => {
     });
 };
 
+const sendShippedEmail = async (userEmail, order) => {
+    await transporter.sendMail({
+        from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
+        to: userEmail,
+        subject: `Your order is on its way — #${order._id.toString().slice(-8).toUpperCase()}`,
+        text: `Hi there,\n\nYour order is on its way.\n\nOrder ID: #${order._id.toString().slice(-8).toUpperCase()}\n\nIt has been shipped and will be delivered to: ${order.deliveryAddress.address}, ${order.deliveryAddress.city}\n\nWe'll notify you once it has been delivered.\n\n- SkincareSync`
+    });
+};
+
+const sendDeliveredEmail = async (userEmail, order) => {
+    const orderId = order._id.toString().slice(-8).toUpperCase();
+    const reviewLink = `http://localhost:3001/product/${order.items[0]?.productId}`;
+
+    await transporter.sendMail({
+        from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
+        to: userEmail,
+        subject: `Your order has been delivered — #${orderId}`,
+        text: `Hi there,\n\nYour order has been delivered.\n\nOrder ID: #${orderId}\n\nWe hope you're satisfied with your purchase. If you have a moment, you can share your feedback with us:\n${reviewLink}\n\nIf there is any issue with your order, feel free to contact us at skincaresync111@gmail.com.\n\nThank you for shopping with us.\n\n- SkincareSync`
+    });
+};
+
 const placeOrder = async (req, res) => {
     try {
         const { userEmail, deliveryAddress } = req.body;
@@ -91,6 +112,13 @@ const updateOrderStatus = async (req, res) => {
             { new: true }
         );
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        if (status === 'Shipped') {
+            sendShippedEmail(order.userEmail, order).catch(err => console.error('Shipped email failed:', err));
+        } else if (status === 'Delivered') {
+            sendDeliveredEmail(order.userEmail, order).catch(err => console.error('Delivered email failed:', err));
+        }
+
         res.json({ success: true, order });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
