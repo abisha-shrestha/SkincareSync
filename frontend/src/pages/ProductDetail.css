@@ -243,6 +243,192 @@
     border: 1px solid var(--border);
 }
 
+
+/* RATING SUMMARY */
+.product-rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.product-rating-text {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* REVIEWS SECTION */
+.reviews-section {
+    max-width: 1200px;
+    margin: 60px auto 0;
+    padding: 0 0 80px;
+}
+
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.reviews-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: Georgia, serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reviews-count {
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+/* REVIEW FORM */
+.review-form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+}
+
+.review-form-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.review-star-picker {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.review-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.review-textarea:focus { border-color: var(--accent-dark); }
+
+.review-submit-btn {
+    padding: 10px 24px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.review-submit-btn:hover { opacity: 0.88; }
+
+.review-cancel-btn {
+    padding: 10px 24px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* REVIEW CARDS */
+.reviews-list { display: flex; flex-direction: column; gap: 14px; }
+
+.review-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+}
+
+.review-card-mine {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.review-author {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.review-comment {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+
+.review-date {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.review-edit-btn {
+    padding: 5px 14px;
+    border: 1px solid var(--accent);
+    background: none;
+    color: var(--accent);
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.review-edit-btn:hover { background: var(--accent-light); }
+
+.review-delete-btn {
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-muted);
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.review-delete-btn:hover { border-color: #e63946; color: #e63946; }
+
+@media (max-width: 768px) {
+    .reviews-section { padding: 0 0 60px; }
+}
+
+
 @media (max-width: 768px) {
     .product-detail-page { padding: 100px 2rem 80px; }
     .product-detail-container { grid-template-columns: 1fr; gap: 36px; }
@@ -250,3 +436,5 @@
     .product-main-image { height: 340px; }
     .product-name { font-size: 28px; }
 }
+
+
