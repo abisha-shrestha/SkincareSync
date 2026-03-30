@@ -16,6 +16,7 @@ const AddressRouter = require('./Routes/AddressRouter');
 const cleanupDeletedAccounts = require('./jobs/cleanupDeletedAccounts');
 const diaryRouter = require('./Routes/DiaryRouter');
 const reviewRouter = require('./Routes/ReviewRouter');
+const ContactRouter = require('./Routes/ContactRouter');
 
 
 require('./Models/db');
@@ -37,6 +38,7 @@ app.use('/api/profile', ProfileRouter);
 app.use('/api/addresses', AddressRouter);
 app.use('/api/diary', diaryRouter);
 app.use('/api/reviews', reviewRouter);
+app.use('/api/contact', ContactRouter);
 
 
 
