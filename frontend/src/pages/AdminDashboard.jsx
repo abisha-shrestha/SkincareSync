@@ -279,99 +279,149 @@ export default function AdminDashboard() {
                 {/* ORDERS */}
                 {activeTab === "orders" && (
                     <div className="admin-table-wrapper">
-                        <table className="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Customer</th>
-                                    <th>Items</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {orders.map(order => (
-                                    <>
-                                        <tr
-                                            key={order._id}
-                                            className={`order-row ${expandedOrder === order._id ? 'order-row-expanded' : ''}`}
-                                            onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
-                                            style={{ cursor: 'pointer' }}
-                                        >
-                                            <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span className={`order-expand-icon ${expandedOrder === order._id ? 'open' : ''}`}>▸</span>
+                        {orders.length === 0 ? (
+                            <p style={{ padding: '40px', textAlign: 'center', color: '#9a8880', fontSize: '14px' }}>No orders yet.</p>
+                        ) : (
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: '40px' }}></th>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {orders.map(order => (
+                                        <>
+                                            <tr
+                                                key={order._id}
+                                                className={`order-row ${expandedOrder === order._id ? 'order-row-expanded' : ''}`}
+                                            >
+                                                {/* Dedicated expand button */}
+                                                <td style={{ textAlign: 'center', padding: '14px 8px' }}>
+                                                    <button
+                                                        onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
+                                                        style={{
+                                                            background: expandedOrder === order._id ? '#f5f0eb' : 'none',
+                                                            border: '1px solid #e6e0d9',
+                                                            borderRadius: '6px',
+                                                            width: '28px',
+                                                            height: '28px',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s',
+                                                            color: expandedOrder === order._id ? '#8B5E3C' : '#9a8880',
+                                                            fontSize: '12px',
+                                                            flexShrink: 0
+                                                        }}
+                                                        title={expandedOrder === order._id ? 'Collapse' : 'View items'}
+                                                    >
+                                                        <span className={`order-expand-icon ${expandedOrder === order._id ? 'open' : ''}`}>▸</span>
+                                                    </button>
+                                                </td>
+                                                <td style={{ fontWeight: 600 }}>
                                                     #{order._id.slice(-8).toUpperCase()}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <p style={{ fontWeight: 500 }}>{order.deliveryAddress.fullName}</p>
-                                                <p style={{ fontSize: '12px', color: '#888' }}>{order.userEmail}</p>
-                                            </td>
-                                            <td>{order.items.length} item{order.items.length > 1 ? 's' : ''}</td>
-                                            <td>Rs. {order.totalAmount.toLocaleString()}</td>
-                                            <td onClick={e => e.stopPropagation()}>
-                                                <select
-                                                    value={order.status}
-                                                    onChange={e => updateOrderStatus(order._id, e.target.value)}
-                                                    className="status-select"
-                                                    style={{ borderColor: statusColor(order.status) }}
-                                                >
-                                                    {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
-                                                        <option key={s} value={s}>{s}</option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                            <td style={{ fontSize: '13px', color: '#888' }}>
-                                                {new Date(order.createdAt).toLocaleDateString()}
-                                            </td>
-                                            <td onClick={e => e.stopPropagation()} className="action-cell">
-                                                <button className="icon-btn delete" onClick={() => deleteOrder(order._id)}>
-                                                    <FiTrash2 />
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        {/* EXPANDED ITEMS ROW */}
-                                        {expandedOrder === order._id && (
-                                            <tr key={`${order._id}-expanded`} className="order-items-row">
-                                                <td colSpan={7}>
-                                                    <div className="order-items-expanded">
-                                                        <div className="order-items-expanded-header">
-                                                            <span>Order items</span>
-                                                            <span className="order-delivery-info">
-                                                                Deliver to: {order.deliveryAddress.fullName} · {order.deliveryAddress.address}, {order.deliveryAddress.city} · {order.deliveryAddress.phone}
-                                                            </span>
-                                                        </div>
-                                                        <div className="order-items-list">
-                                                            {order.items.map((item, i) => (
-                                                                <div key={i} className="order-item-expanded">
-                                                                    <div className="order-item-img-admin">
-                                                                        {item.imageUrl
-                                                                            ? <img src={item.imageUrl} alt={item.name} />
-                                                                            : <div className="order-item-img-placeholder" />
-                                                                        }
-                                                                    </div>
-                                                                    <div className="order-item-info-admin">
-                                                                        <p className="order-item-name-admin">{item.name}</p>
-                                                                        <p className="order-item-qty-admin">Qty: {item.quantity}</p>
-                                                                    </div>
-                                                                    <p className="order-item-price-admin">
-                                                                        Rs. {(item.price * item.quantity).toLocaleString()}
-                                                                    </p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <p style={{ fontWeight: 500 }}>{order.deliveryAddress.fullName}</p>
+                                                    <p style={{ fontSize: '12px', color: '#888' }}>{order.userEmail}</p>
+                                                </td>
+                                                <td>
+                                                    <span style={{
+                                                        background: '#f5f0eb',
+                                                        color: '#6b5d52',
+                                                        padding: '3px 10px',
+                                                        borderRadius: '20px',
+                                                        fontSize: '12px',
+                                                        fontWeight: 600
+                                                    }}>
+                                                        {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                                                    </span>
+                                                </td>
+                                                <td style={{ fontWeight: 600 }}>Rs. {order.totalAmount.toLocaleString()}</td>
+                                                <td onClick={e => e.stopPropagation()}>
+                                                    <select
+                                                        value={order.status}
+                                                        onChange={e => updateOrderStatus(order._id, e.target.value)}
+                                                        className="status-select"
+                                                        style={{ borderColor: statusColor(order.status), color: statusColor(order.status), fontWeight: 600 }}
+                                                    >
+                                                        {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
+                                                            <option key={s} value={s}>{s}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td style={{ fontSize: '13px', color: '#888' }}>
+                                                    {new Date(order.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                </td>
+                                                <td className="action-cell">
+                                                    <button className="icon-btn delete" onClick={() => deleteOrder(order._id)}>
+                                                        <FiTrash2 />
+                                                    </button>
                                                 </td>
                                             </tr>
-                                        )}
-                                    </>
-                                ))}
-                            </tbody>
-                        </table>
+
+                                            {/* EXPANDED ITEMS ROW */}
+                                            {expandedOrder === order._id && (
+                                                <tr key={`${order._id}-expanded`} className="order-items-row">
+                                                    <td colSpan={8}>
+                                                        <div className="order-items-expanded">
+                                                            <div className="order-items-expanded-header">
+                                                                <span>Order items</span>
+                                                                <span className="order-delivery-info">
+                                                                        {order.deliveryAddress.fullName} · {order.deliveryAddress.address}, {order.deliveryAddress.city} · {order.deliveryAddress.phone}
+                                                                </span>
+                                                            </div>
+                                                            <div className="order-items-list">
+                                                                {order.items.map((item, i) => (
+                                                                    <div key={i} className="order-item-expanded">
+                                                                        <div className="order-item-img-admin">
+                                                                            {item.imageUrl
+                                                                                ? <img src={item.imageUrl} alt={item.name} />
+                                                                                : <div className="order-item-img-placeholder" />
+                                                                            }
+                                                                        </div>
+                                                                        <div className="order-item-info-admin">
+                                                                            <p className="order-item-name-admin">{item.name}</p>
+                                                                            <p className="order-item-qty-admin">Qty: {item.quantity} × Rs. {item.price.toLocaleString()}</p>
+                                                                        </div>
+                                                                        <p className="order-item-price-admin">
+                                                                            Rs. {(item.price * item.quantity).toLocaleString()}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            {/* Total line */}
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                justifyContent: 'flex-end',
+                                                                marginTop: '14px',
+                                                                paddingTop: '14px',
+                                                                borderTop: '1px solid #e6e0d9',
+                                                                fontSize: '14px',
+                                                                fontWeight: 700,
+                                                                color: '#3a2e28',
+                                                                gap: '12px'
+                                                            }}>
+                                                                <span>Order Total</span>
+                                                                <span>Rs. {order.totalAmount.toLocaleString()}</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 )}
 
