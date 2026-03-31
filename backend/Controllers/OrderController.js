@@ -44,22 +44,50 @@ const sendDeliveredEmail = async (userEmail, order) => {
     });
 };
 
+
 const placeOrder = async (req, res) => {
     try {
-        const { userEmail, deliveryAddress } = req.body;
+        const { userEmail, deliveryAddress, items: incomingItems, isBuyNow } = req.body;
 
-        const cart = await Cart.findOne({ userId: userEmail }).populate('items.productId');
-        if (!cart || cart.items.length === 0) {
-            return res.status(400).json({ success: false, message: 'Cart is empty' });
+        let items;
+
+        if (isBuyNow) {
+            // Buy Now: use the items sent directly, never touch the cart
+            if (!incomingItems || incomingItems.length === 0) {
+                return res.status(400).json({ success: false, message: 'No items provided' });
+            }
+            items = incomingItems;
+
+        } else if (incomingItems && incomingItems.length > 0) {
+            // Selective cart checkout: use the explicitly sent items
+            items = incomingItems;
+
+            // Only remove the ordered items from the cart, leave the rest
+            const cart = await Cart.findOne({ userId: userEmail });
+            if (cart) {
+                const orderedProductIds = incomingItems.map(i => i.productId.toString());
+                cart.items = cart.items.filter(
+                    item => !orderedProductIds.includes(item.productId.toString())
+                );
+                await cart.save();
+            }
+
+        } else {
+            // Fallback: old behaviour — use full cart and clear it
+            const cart = await Cart.findOne({ userId: userEmail }).populate('items.productId');
+            if (!cart || cart.items.length === 0) {
+                return res.status(400).json({ success: false, message: 'Cart is empty' });
+            }
+            items = cart.items.map(item => ({
+                productId: item.productId._id,
+                name: item.productId.name,
+                price: item.price,
+                quantity: item.quantity,
+                imageUrl: item.productId.imageUrl || ''
+            }));
+            cart.items = [];
+            await cart.save();
         }
-
-        const items = cart.items.map(item => ({
-            productId: item.productId._id,
-            name: item.productId.name,
-            price: item.price,
-            quantity: item.quantity,
-            imageUrl: item.productId.imageUrl || ''
-        }));
 
         const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -72,9 +100,6 @@ const placeOrder = async (req, res) => {
         });
 
         await order.save();
-
-        cart.items = [];
-        await cart.save();
 
         sendOrderConfirmation(userEmail, order).catch(err => console.error('Email failed:', err));
 

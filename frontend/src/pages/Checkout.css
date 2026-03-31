@@ -227,3 +227,16 @@
 }
 
 .checkout-required { color: #e63946; }
+
+
+.checkout-buynow-badge {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 14px;
+    display: inline-block;
+}

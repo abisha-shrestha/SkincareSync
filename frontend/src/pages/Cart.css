@@ -128,3 +128,62 @@
 .empty-icon { font-size: 56px; margin-bottom: 14px; }
 .empty-cart h2 { font-size: 22px; margin-bottom: 8px; color: var(--text-primary); }
 .empty-cart p { color: var(--text-muted); margin-bottom: 24px; font-size: 15px; }
+
+
+/* Select All row */
+.cart-select-all {
+    padding: 12px 24px;
+    background: var(--bg-card);
+    border-radius: 14px;
+    border: 1px solid var(--border-light);
+}
+
+.cart-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Checkbox inside each cart item */
+.cart-item-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Update grid to include checkbox column */
+.cart-item {
+    grid-template-columns: 36px 120px 1fr 140px 50px;
+}
+
+/* Dim unselected items */
+.cart-item-dimmed {
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+}
+
+.cart-item-dimmed:hover {
+    opacity: 0.65;
+}
+
+/* Selected note above summary rows */
+.summary-selected-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
