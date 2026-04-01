@@ -19,7 +19,7 @@ export default function AdminDashboard() {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [productForm, setProductForm] = useState({
-        name: "", price: "", category: "", description: "", skinTypes: "", imageUrl: ""
+        name: "", brand: "", price: "", category: "", description: "", skinTypes: "", imageUrl: ""
     });
 
     const getHeaders = () => ({
@@ -121,16 +121,20 @@ export default function AdminDashboard() {
 
     const openAddProduct = () => {
         setEditingProduct(null);
-        setProductForm({ name: "", price: "", category: "", description: "", skinTypes: "", imageUrl: "" });
+        setProductForm({ name: "", brand: "", price: "", category: "", description: "", skinTypes: "", imageUrl: "" });
         setShowProductModal(true);
     };
 
     const openEditProduct = (product) => {
         setEditingProduct(product);
         setProductForm({
-            name: product.name, price: product.price,
-            category: product.category || "", description: product.description || "",
-            skinTypes: (product.skinTypes || []).join(", "), imageUrl: product.imageUrl || ""
+            name: product.name,
+            brand: product.brand || "",
+            price: product.price,
+            category: product.category || "",
+            description: product.description || "",
+            skinTypes: (product.skinTypes || []).join(", "),
+            imageUrl: product.imageUrl || ""
         });
         setShowProductModal(true);
     };
@@ -162,6 +166,10 @@ export default function AdminDashboard() {
     };
 
     const saveProduct = async () => {
+        if (!productForm.name.trim()) { toast.error("Product name is required"); return; }
+        if (!productForm.brand.trim()) { toast.error("Brand is required"); return; }
+        if (!productForm.price) { toast.error("Price is required"); return; }
+
         const body = {
             ...productForm,
             price: Number(productForm.price),
@@ -257,7 +265,6 @@ export default function AdminDashboard() {
                             ))}
                         </div>
 
-                        {/* ANALYTICS CHART */}
                         <div className="analytics-card">
                             <h2 className="analytics-title">Revenue & Orders — Last 7 Days</h2>
                             <ResponsiveContainer width="100%" height={300}>
@@ -302,7 +309,6 @@ export default function AdminDashboard() {
                                                 key={order._id}
                                                 className={`order-row ${expandedOrder === order._id ? 'order-row-expanded' : ''}`}
                                             >
-                                                {/* Dedicated expand button */}
                                                 <td style={{ textAlign: 'center', padding: '14px 8px' }}>
                                                     <button
                                                         onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
@@ -326,22 +332,13 @@ export default function AdminDashboard() {
                                                         <span className={`order-expand-icon ${expandedOrder === order._id ? 'open' : ''}`}>▸</span>
                                                     </button>
                                                 </td>
-                                                <td style={{ fontWeight: 600 }}>
-                                                    #{order._id.slice(-8).toUpperCase()}
-                                                </td>
+                                                <td style={{ fontWeight: 600 }}>#{order._id.slice(-8).toUpperCase()}</td>
                                                 <td>
                                                     <p style={{ fontWeight: 500 }}>{order.deliveryAddress.fullName}</p>
                                                     <p style={{ fontSize: '12px', color: '#888' }}>{order.userEmail}</p>
                                                 </td>
                                                 <td>
-                                                    <span style={{
-                                                        background: '#f5f0eb',
-                                                        color: '#6b5d52',
-                                                        padding: '3px 10px',
-                                                        borderRadius: '20px',
-                                                        fontSize: '12px',
-                                                        fontWeight: 600
-                                                    }}>
+                                                    <span style={{ background: '#f5f0eb', color: '#6b5d52', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
                                                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                                                     </span>
                                                 </td>
@@ -368,7 +365,6 @@ export default function AdminDashboard() {
                                                 </td>
                                             </tr>
 
-                                            {/* EXPANDED ITEMS ROW */}
                                             {expandedOrder === order._id && (
                                                 <tr key={`${order._id}-expanded`} className="order-items-row">
                                                     <td colSpan={8}>
@@ -376,7 +372,7 @@ export default function AdminDashboard() {
                                                             <div className="order-items-expanded-header">
                                                                 <span>Order items</span>
                                                                 <span className="order-delivery-info">
-                                                                        {order.deliveryAddress.fullName} · {order.deliveryAddress.address}, {order.deliveryAddress.city} · {order.deliveryAddress.phone}
+                                                                    {order.deliveryAddress.fullName} · {order.deliveryAddress.address}, {order.deliveryAddress.city} · {order.deliveryAddress.phone}
                                                                 </span>
                                                             </div>
                                                             <div className="order-items-list">
@@ -398,18 +394,7 @@ export default function AdminDashboard() {
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                            {/* Total line */}
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                justifyContent: 'flex-end',
-                                                                marginTop: '14px',
-                                                                paddingTop: '14px',
-                                                                borderTop: '1px solid #e6e0d9',
-                                                                fontSize: '14px',
-                                                                fontWeight: 700,
-                                                                color: '#3a2e28',
-                                                                gap: '12px'
-                                                            }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #e6e0d9', fontSize: '14px', fontWeight: 700, color: '#3a2e28', gap: '12px' }}>
                                                                 <span>Order Total</span>
                                                                 <span>Rs. {order.totalAmount.toLocaleString()}</span>
                                                             </div>
@@ -433,6 +418,7 @@ export default function AdminDashboard() {
                                 <tr>
                                     <th>Image</th>
                                     <th>Name</th>
+                                    <th>Brand</th>
                                     <th>Category</th>
                                     <th>Price</th>
                                     <th>Actions</th>
@@ -447,7 +433,8 @@ export default function AdminDashboard() {
                                                 : <div style={{ width: '50px', height: '50px', background: '#f2f2f2', borderRadius: '8px' }} />
                                             }
                                         </td>
-                                        <td>{p.name}</td>
+                                        <td style={{ fontWeight: 500 }}>{p.name}</td>
+                                        <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{p.brand || "—"}</td>
                                         <td>{p.category || "—"}</td>
                                         <td>Rs. {p.price?.toLocaleString()}</td>
                                         <td className="action-cell">
@@ -494,6 +481,7 @@ export default function AdminDashboard() {
                 )}
             </main>
 
+            {/* PRODUCT MODAL */}
             {showProductModal && (
                 <div className="modal-overlay">
                     <div className="modal">
@@ -504,18 +492,59 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                         <div className="modal-body">
-                            {["name", "price", "category", "description"].map(field => (
-                                <div className="form-group" key={field}>
-                                    <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-                                    <input
-                                        type={field === "price" ? "number" : "text"}
-                                        value={productForm[field]}
-                                        onChange={e => setProductForm({ ...productForm, [field]: e.target.value })}
-                                    />
-                                </div>
-                            ))}
+
                             <div className="form-group">
-                                <label>Skin Types (comma separated)</label>
+                                <label>Name <span style={{ color: '#e63946' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    value={productForm.name}
+                                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                                    placeholder="e.g. Niacinamide Serum"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Brand <span style={{ color: '#e63946' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    value={productForm.brand}
+                                    onChange={e => setProductForm({ ...productForm, brand: e.target.value })}
+                                    placeholder="e.g. The Ordinary"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Price <span style={{ color: '#e63946' }}>*</span></label>
+                                <input
+                                    type="number"
+                                    value={productForm.price}
+                                    onChange={e => setProductForm({ ...productForm, price: e.target.value })}
+                                    placeholder="e.g. 1500"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Category</label>
+                                <input
+                                    type="text"
+                                    value={productForm.category}
+                                    onChange={e => setProductForm({ ...productForm, category: e.target.value })}
+                                    placeholder="e.g. Serum"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Description</label>
+                                <input
+                                    type="text"
+                                    value={productForm.description}
+                                    onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                                    placeholder="Short product description"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Skin Types <span style={{ color: '#9a8880', fontWeight: 400, fontSize: '12px' }}>(comma separated)</span></label>
                                 <input
                                     type="text"
                                     value={productForm.skinTypes}
@@ -523,14 +552,22 @@ export default function AdminDashboard() {
                                     placeholder="e.g. Oily, Dry, Combination"
                                 />
                             </div>
+
                             <div className="form-group">
                                 <label>Product Image</label>
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
-                                {uploadingImage && <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>}
+                                {uploadingImage && (
+                                    <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>
+                                )}
                                 {productForm.imageUrl && (
-                                    <img src={productForm.imageUrl} alt="Preview" style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
+                                    <img
+                                        src={productForm.imageUrl}
+                                        alt="Preview"
+                                        style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }}
+                                    />
                                 )}
                             </div>
+
                         </div>
                         <div className="modal-footer">
                             <button className="btn-modal-cancel" onClick={() => setShowProductModal(false)}>Cancel</button>

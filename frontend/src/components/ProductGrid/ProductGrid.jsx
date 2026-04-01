@@ -42,7 +42,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         <>
             {!limit && (
                 <div className="products-filters">
-                    {["All", "Hydration", "Repair", "Cleanser", "Toner"].map(category => (
+                    {["All", "Cleanser", "Toner", "Moisturizer", "Sunscreen", ].map(category => (
                         <button
                             key={category}
                             className={`filter-btn ${activeCategory === category ? "active" : ""}`}

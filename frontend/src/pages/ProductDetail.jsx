@@ -17,7 +17,6 @@ export default function ProductDetail() {
     const userEmail = localStorage.getItem('email') || 'guest';
     const userName = localStorage.getItem('name') || 'Guest';
 
-    // Review state
     const [reviews, setReviews] = useState([]);
     const [average, setAverage] = useState(null);
     const [myReview, setMyReview] = useState(null);
@@ -218,19 +217,38 @@ export default function ProductDetail() {
                     <div className="product-details-section">
                         <div className="product-header">
                             <p className="product-category">{product.category}</p>
+
+                            {/* Clickable brand */}
+                            {product.brand && (
+                                <p
+                                    className="product-brand-link"
+                                    onClick={() => navigate(`/brand/${encodeURIComponent(product.brand)}`)}
+                                >
+                                    {product.brand}
+                                </p>
+                            )}
+
                             <h1 className="product-name">{product.name}</h1>
                             <p className="product-price-large">Rs. {product.price.toLocaleString()}</p>
+
                             {average && (
                                 <div className="product-rating-summary">
                                     <StarDisplay rating={Math.round(average)} />
-                                    <span className="product-rating-text">{average} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
+                                    <span className="product-rating-text">
+                                        {average} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
+                                    </span>
                                 </div>
                             )}
+
                             <button
                                 className={`wishlist-btn ${wishlisted ? 'active' : ''}`}
                                 onClick={toggleWishlist}
                             >
-                                <FiHeart style={{ fill: wishlisted ? 'var(--accent)' : 'none', color: wishlisted ? 'var(--accent)' : 'var(--text-muted)', fontSize: '20px' }} />
+                                <FiHeart style={{
+                                    fill: wishlisted ? 'var(--accent)' : 'none',
+                                    color: wishlisted ? 'var(--accent)' : 'var(--text-muted)',
+                                    fontSize: '20px'
+                                }} />
                             </button>
                         </div>
 
@@ -248,7 +266,9 @@ export default function ProductDetail() {
                         </div>
 
                         <div className="product-actions">
-                            <button className="product-btn-buynow" onClick={buyNow} disabled={addingToCart}>Buy Now</button>
+                            <button className="product-btn-buynow" onClick={buyNow} disabled={addingToCart}>
+                                Buy Now
+                            </button>
                             <button className="product-btn-addcart" onClick={addToCart} disabled={addingToCart}>
                                 <FiShoppingCart /> Add to Cart
                             </button>
@@ -279,7 +299,6 @@ export default function ProductDetail() {
                         )}
                     </div>
 
-                    {/* Review form — only for buyers who haven't reviewed yet, or editing */}
                     {canReview && (!myReview || editMode) && (
                         <div className="review-form-card">
                             <h3>{editMode ? 'Edit your review' : 'Write a review'}</h3>
@@ -322,7 +341,6 @@ export default function ProductDetail() {
                         </div>
                     )}
 
-                    {/* My review display */}
                     {myReview && !editMode && (
                         <div className="review-card review-card-mine">
                             <div className="review-card-header">
@@ -336,11 +354,12 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                             {myReview.comment && <p className="review-comment">{myReview.comment}</p>}
-                            <p className="review-date">{new Date(myReview.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            <p className="review-date">
+                                {new Date(myReview.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
                         </div>
                     )}
 
-                    {/* Other reviews */}
                     <div className="reviews-list">
                         {reviews.filter(r => r.userEmail !== userEmail).map(review => (
                             <div key={review._id} className="review-card">
@@ -349,7 +368,9 @@ export default function ProductDetail() {
                                         <p className="review-author">{review.userName}</p>
                                         <StarDisplay rating={review.rating} />
                                     </div>
-                                    <p className="review-date">{new Date(review.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <p className="review-date">
+                                        {new Date(review.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
                                 </div>
                                 {review.comment && <p className="review-comment">{review.comment}</p>}
                             </div>
