@@ -1,5 +1,5 @@
 /* ============================================
-   CSS VARIABLES — LIGHT MODE (DEFAULT)
+    CSS VARIABLES — LIGHT MODE (DEFAULT)
    ============================================ */
 :root {
     --bg-primary: #ffffff;
@@ -31,7 +31,7 @@
 }
 
 /* ============================================
-   CSS VARIABLES — DARK MODE
+    CSS VARIABLES — DARK MODE
    ============================================ */
 [data-theme="dark"] {
     --bg-primary: #332c27;
