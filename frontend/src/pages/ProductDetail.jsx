@@ -26,6 +26,9 @@ export default function ProductDetail() {
     const [reviewError, setReviewError] = useState('');
     const [canReview, setCanReview] = useState(false);
 
+    const [similarProducts, setSimilarProducts] = useState([]);
+    const [brandProducts, setBrandProducts] = useState([]);
+
     useEffect(() => {
         fetch(`http://localhost:3000/api/products/${id}`)
             .then(res => res.json())
@@ -52,6 +55,38 @@ export default function ProductDetail() {
         fetchReviews();
         checkCanReview();
     }, [id]);
+
+    useEffect(() => {
+        if (!product) return;
+        fetch('http://localhost:3000/api/products')
+            .then(res => res.json())
+            .then(data => {
+                const all = data.products || [];
+                const others = all.filter(p => p._id !== product._id);
+
+                // Similar: same category + at least one matching skin type
+                const similar = others
+                    .filter(p =>
+                        p.category === product.category &&
+                        p.skinTypes?.some(t =>
+                            product.skinTypes?.some(pt =>
+                                pt.toLowerCase() === t.toLowerCase()
+                            )
+                        )
+                    )
+                    .slice(0, 4);
+                setSimilarProducts(similar);
+
+                // More from brand
+                if (product.brand) {
+                    const fromBrand = others
+                        .filter(p => p.brand === product.brand)
+                        .slice(0, 4);
+                    setBrandProducts(fromBrand);
+                }
+            })
+            .catch(() => {});
+    }, [product]);
 
     const fetchReviews = async () => {
         try {
@@ -125,14 +160,34 @@ export default function ProductDetail() {
     const StarDisplay = ({ rating, size = 16 }) => (
         <div style={{ display: 'flex', gap: '2px' }}>
             {[1, 2, 3, 4, 5].map(n => (
-                <FiStar
-                    key={n}
-                    size={size}
-                    style={{
-                        fill: n <= rating ? 'var(--accent)' : 'none',
-                        color: n <= rating ? 'var(--accent)' : 'var(--border)',
+                <FiStar key={n} size={size} style={{
+                    fill: n <= rating ? 'var(--accent)' : 'none',
+                    color: n <= rating ? 'var(--accent)' : 'var(--border)',
+                }} />
+            ))}
+        </div>
+    );
+
+    const RecommendationGrid = ({ items }) => (
+        <div className="recommendations-grid">
+            {items.map(p => (
+                <div
+                    key={p._id}
+                    className="recommendation-card"
+                    onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        navigate(`/products/${p._id}`);
                     }}
-                />
+                >
+                    <div className="recommendation-img">
+                        {p.imageUrl && <img src={p.imageUrl} alt={p.name} />}
+                    </div>
+                    <div className="recommendation-info">
+                        <p className="recommendation-category">{p.category}</p>
+                        <p className="recommendation-name">{p.name}</p>
+                        <p className="recommendation-price">Rs. {p.price.toLocaleString()}</p>
+                    </div>
+                </div>
             ))}
         </div>
     );
@@ -174,6 +229,8 @@ export default function ProductDetail() {
                 _id: product._id,
                 name: product.name,
                 imageUrl: product.imageUrl || product.image || null,
+                category: product.category || null,   // ← add this
+                brand: product.brand || null,          // ← add this
             },
             name: product.name,
             price: product.price,
@@ -217,20 +274,13 @@ export default function ProductDetail() {
                     <div className="product-details-section">
                         <div className="product-header">
                             <p className="product-category">{product.category}</p>
-
-                            {/* Clickable brand */}
                             {product.brand && (
-                                <p
-                                    className="product-brand-link"
-                                    onClick={() => navigate(`/brand/${encodeURIComponent(product.brand)}`)}
-                                >
+                                <p className="product-brand-link" onClick={() => navigate(`/brand/${encodeURIComponent(product.brand)}`)}>
                                     {product.brand}
                                 </p>
                             )}
-
                             <h1 className="product-name">{product.name}</h1>
                             <p className="product-price-large">Rs. {product.price.toLocaleString()}</p>
-
                             {average && (
                                 <div className="product-rating-summary">
                                     <StarDisplay rating={Math.round(average)} />
@@ -239,11 +289,7 @@ export default function ProductDetail() {
                                     </span>
                                 </div>
                             )}
-
-                            <button
-                                className={`wishlist-btn ${wishlisted ? 'active' : ''}`}
-                                onClick={toggleWishlist}
-                            >
+                            <button className={`wishlist-btn ${wishlisted ? 'active' : ''}`} onClick={toggleWishlist}>
                                 <FiHeart style={{
                                     fill: wishlisted ? 'var(--accent)' : 'none',
                                     color: wishlisted ? 'var(--accent)' : 'var(--text-muted)',
@@ -266,9 +312,7 @@ export default function ProductDetail() {
                         </div>
 
                         <div className="product-actions">
-                            <button className="product-btn-buynow" onClick={buyNow} disabled={addingToCart}>
-                                Buy Now
-                            </button>
+                            <button className="product-btn-buynow" onClick={buyNow} disabled={addingToCart}>Buy Now</button>
                             <button className="product-btn-addcart" onClick={addToCart} disabled={addingToCart}>
                                 <FiShoppingCart /> Add to Cart
                             </button>
@@ -307,7 +351,6 @@ export default function ProductDetail() {
                                     <FiStar
                                         key={n}
                                         size={28}
-                                        className="review-star-btn"
                                         onMouseEnter={() => setHovered(n)}
                                         onMouseLeave={() => setHovered(0)}
                                         onClick={() => setReviewForm({ ...reviewForm, rating: n })}
@@ -333,9 +376,7 @@ export default function ProductDetail() {
                                     {editMode ? 'Update Review' : 'Submit Review'}
                                 </button>
                                 {editMode && (
-                                    <button className="review-cancel-btn" onClick={() => setEditMode(false)}>
-                                        Cancel
-                                    </button>
+                                    <button className="review-cancel-btn" onClick={() => setEditMode(false)}>Cancel</button>
                                 )}
                             </div>
                         </div>
@@ -383,6 +424,25 @@ export default function ProductDetail() {
                         </p>
                     )}
                 </div>
+
+                {/* SIMILAR PRODUCTS */}
+                {similarProducts.length > 0 && (
+                    <div className="recommendations-section">
+                        <h2 className="recommendations-title">Similar Products</h2>
+                        <p className="recommendations-subtitle">Same category, suited for your skin type</p>
+                        <RecommendationGrid items={similarProducts} />
+                    </div>
+                )}
+
+                {/* MORE FROM BRAND */}
+                {brandProducts.length > 0 && (
+                    <div className="recommendations-section">
+                        <h2 className="recommendations-title">More from {product.brand}</h2>
+                        <p className="recommendations-subtitle">Other products from the same brand</p>
+                        <RecommendationGrid items={brandProducts} />
+                    </div>
+                )}
+
             </section>
             <Footer />
         </>

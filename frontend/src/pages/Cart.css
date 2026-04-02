@@ -187,3 +187,92 @@
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-light);
 }
+
+
+.cart-recommendations {
+    margin-top: 48px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+}
+
+.recommendations-title {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: Georgia, serif;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+}
+
+.recommendations-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.recommendation-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.recommendation-img {
+    width: 100%;
+    height: 160px;
+    background: var(--bg-subtle);
+    overflow: hidden;
+}
+
+.recommendation-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recommendation-card:hover .recommendation-img img {
+    transform: scale(1.04);
+}
+
+.recommendation-info { padding: 12px 14px; }
+
+.recommendation-category {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    margin-bottom: 4px;
+}
+
+.recommendation-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+
+.recommendation-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-dark);
+}
+
+@media (max-width: 768px) {
+    .recommendations-grid { grid-template-columns: repeat(2, 1fr); }
+}
