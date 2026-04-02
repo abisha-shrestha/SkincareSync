@@ -214,7 +214,7 @@ export default function ProductDetail() {
             const res = await fetch('http://localhost:3000/api/cart', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userEmail, productId: product._id, quantity, price: product.price })
+                body: JSON.stringify({ userEmail, productId: product._id, quantity, price: product.price, addToExisting: true })
             });
             const data = await res.json();
             if (data.success) toast.success(`${product.name} added to cart`);
@@ -229,8 +229,8 @@ export default function ProductDetail() {
                 _id: product._id,
                 name: product.name,
                 imageUrl: product.imageUrl || product.image || null,
-                category: product.category || null,   // ← add this
-                brand: product.brand || null,          // ← add this
+                category: product.category || null,   
+                brand: product.brand || null,          
             },
             name: product.name,
             price: product.price,
