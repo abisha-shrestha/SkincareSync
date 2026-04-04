@@ -62,7 +62,15 @@ export default function Profile() {
         try {
             const res = await fetch(`http://localhost:3000/api/profile?userEmail=${userEmail}`);
             const data = await res.json();
-            if (data.success) setProfile(data.profile);
+            if (data.success) {
+                setProfile({
+                    fullName: data.profile.fullName || userName,
+                    phone: data.profile.phone || "",
+                    city: data.profile.city || "",
+                    birthdate: data.profile.birthdate || "",
+                    gender: data.profile.gender || ""
+                });
+            }
         } catch (err) { console.error(err); }
     };
 
