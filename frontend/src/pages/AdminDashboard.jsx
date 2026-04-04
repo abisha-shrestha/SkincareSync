@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut, FiSun, FiMoon } from "react-icons/fi";
+import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut, FiSun, FiMoon, FiFileText, FiGrid, FiList } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useTheme } from "../ThemeContext";
 import "./AdminDashboard.css";
@@ -14,6 +14,7 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [recentOrders, setRecentOrders] = useState([]);
     const [analytics, setAnalytics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showProductModal, setShowProductModal] = useState(false);
@@ -23,6 +24,22 @@ export default function AdminDashboard() {
     const [productForm, setProductForm] = useState({
         name: "", brand: "", price: "", category: "", description: "", skinTypes: "", imageUrl: ""
     });
+
+    const tabIcons = {
+    overview: <FiGrid size={14} />,
+    orders: <FiShoppingCart size={14} />,
+    products: <FiPackage size={14} />,
+    users: <FiUsers size={14} />,
+    reports: <FiFileText size={14} />,
+};
+
+    // Reports state
+    const [reportType, setReportType] = useState("sales");
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+    const [reportData, setReportData] = useState([]);
+    const [reportGenerated, setReportGenerated] = useState(false);
+    const [generatingReport, setGeneratingReport] = useState(false);
 
     const getHeaders = () => ({
         "Content-Type": "application/json",
@@ -40,7 +57,7 @@ export default function AdminDashboard() {
         if (!token || role !== "admin") navigate("/auth");
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    useEffect(() => { fetchStats(); fetchAnalytics(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => { fetchStats(); fetchAnalytics(); fetchRecentOrders(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => { if (activeTab === "users") fetchUsers(); }, [activeTab]);
     useEffect(() => { if (activeTab === "products") fetchProducts(); }, [activeTab]);
     useEffect(() => { if (activeTab === "orders") fetchOrders(); }, [activeTab]);
@@ -59,6 +76,14 @@ export default function AdminDashboard() {
             const res = await fetch("http://localhost:3000/api/admin/analytics", { headers: getHeaders() });
             const data = await res.json();
             setAnalytics(data.analytics || []);
+        } catch (err) { console.error(err); }
+    };
+
+    const fetchRecentOrders = async () => {
+        try {
+            const res = await fetch("http://localhost:3000/api/orders/all", { headers: getHeaders() });
+            const data = await res.json();
+            setRecentOrders((data.orders || []).slice(0, 5));
         } catch (err) { console.error(err); }
     };
 
@@ -171,6 +196,178 @@ export default function AdminDashboard() {
         toast.success(editingProduct ? "Product updated" : "Product added");
     };
 
+    // ─── REPORTS ────────────────────────────────────────────────────────────────
+
+    const generateReport = async () => {
+        setGeneratingReport(true);
+        setReportGenerated(false);
+        try {
+            const [ordersRes, productsRes, usersRes] = await Promise.all([
+                fetch("http://localhost:3000/api/orders/all", { headers: getHeaders() }),
+                fetch("http://localhost:3000/api/admin/products", { headers: getHeaders() }),
+                fetch("http://localhost:3000/api/admin/users", { headers: getHeaders() }),
+            ]);
+            const ordersData = await ordersRes.json();
+            const productsData = await productsRes.json();
+            const usersData = await usersRes.json();
+
+            let allOrders = ordersData.orders || [];
+            const allProducts = productsData.products || [];
+            const allUsers = usersData.users || [];
+
+            // Apply date filter
+            if (dateFrom) allOrders = allOrders.filter(o => new Date(o.createdAt) >= new Date(dateFrom));
+            if (dateTo) allOrders = allOrders.filter(o => new Date(o.createdAt) <= new Date(dateTo + "T23:59:59"));
+
+            let rows = [];
+
+            if (reportType === "sales") {
+                rows = allOrders.map(o => ({
+                    "Order ID": `#${o._id.slice(-8).toUpperCase()}`,
+                    "Customer": o.deliveryAddress?.fullName || o.userEmail,
+                    "Email": o.userEmail,
+                    "Items": o.items.length,
+                    "Total (Rs.)": o.totalAmount,
+                    "Status": o.status,
+                    "Payment": o.paymentMethod || "Cash on Delivery",
+                    "Date": new Date(o.createdAt).toLocaleDateString("en-NP"),
+                }));
+            }
+
+            if (reportType === "orders") {
+                rows = allOrders.flatMap(o =>
+                    o.items.map(item => ({
+                        "Order ID": `#${o._id.slice(-8).toUpperCase()}`,
+                        "Customer": o.deliveryAddress?.fullName || o.userEmail,
+                        "Product": item.name,
+                        "Qty": item.quantity,
+                        "Unit Price (Rs.)": item.price,
+                        "Subtotal (Rs.)": item.price * item.quantity,
+                        "Status": o.status,
+                        "Date": new Date(o.createdAt).toLocaleDateString("en-NP"),
+                    }))
+                );
+            }
+
+            if (reportType === "products") {
+                const salesMap = {};
+                allOrders.forEach(o => {
+                    o.items.forEach(item => {
+                        const key = item.name;
+                        if (!salesMap[key]) salesMap[key] = { qty: 0, revenue: 0 };
+                        salesMap[key].qty += item.quantity;
+                        salesMap[key].revenue += item.price * item.quantity;
+                    });
+                });
+                rows = allProducts.map(p => ({
+                    "Product": p.name,
+                    "Brand": p.brand || "—",
+                    "Category": p.category || "—",
+                    "Price (Rs.)": p.price,
+                    "Units Sold": salesMap[p.name]?.qty || 0,
+                    "Revenue (Rs.)": salesMap[p.name]?.revenue || 0,
+                    "Skin Types": (p.skinTypes || []).join(", "),
+                }));
+            }
+
+            if (reportType === "customers") {
+                const orderMap = {};
+                allOrders.forEach(o => {
+                    if (!orderMap[o.userEmail]) orderMap[o.userEmail] = { count: 0, spent: 0 };
+                    orderMap[o.userEmail].count += 1;
+                    orderMap[o.userEmail].spent += o.totalAmount;
+                });
+                rows = allUsers.map(u => ({
+                    "Name": u.name,
+                    "Email": u.email,
+                    "Skin Type": u.skinType || "—",
+                    "Total Orders": orderMap[u.email]?.count || 0,
+                    "Total Spent (Rs.)": orderMap[u.email]?.spent || 0,
+                }));
+            }
+
+            if (reportType === "skintypes") {
+                const skinMap = {};
+                allOrders.forEach(o => {
+                    const user = allUsers.find(u => u.email === o.userEmail);
+                    const skinType = user?.skinType || "Unknown";
+                    if (!skinMap[skinType]) skinMap[skinType] = { orders: 0, revenue: 0, customers: new Set() };
+                    skinMap[skinType].orders += 1;
+                    skinMap[skinType].revenue += o.totalAmount;
+                    skinMap[skinType].customers.add(o.userEmail);
+                });
+                rows = Object.entries(skinMap).map(([type, data]) => ({
+                    "Skin Type": type,
+                    "Unique Customers": data.customers.size,
+                    "Total Orders": data.orders,
+                    "Total Revenue (Rs.)": data.revenue,
+                    "Avg Order Value (Rs.)": Math.round(data.revenue / data.orders),
+                }));
+            }
+
+            setReportData(rows);
+            setReportGenerated(true);
+        } catch (err) {
+            toast.error("Failed to generate report");
+            console.error(err);
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
+    const downloadCSV = () => {
+        if (!reportData.length) return;
+        const headers = Object.keys(reportData[0]);
+        const csvRows = [
+            headers.join(","),
+            ...reportData.map(row =>
+                headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`).join(",")
+            )
+        ];
+        const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `skincaresync-${reportType}-report.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("CSV downloaded");
+    };
+
+    const downloadExcel = () => {
+        if (!reportData.length) return;
+        const headers = Object.keys(reportData[0]);
+        const rows = reportData.map(row => headers.map(h => row[h]));
+
+        // Build a simple HTML table that Excel can open
+        const tableHTML = `
+            <html><head><meta charset="UTF-8"></head><body>
+            <table>
+                <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+                ${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}
+            </table>
+            </body></html>
+        `;
+        const blob = new Blob([tableHTML], { type: "application/vnd.ms-excel" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `skincaresync-${reportType}-report.xls`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Excel file downloaded");
+    };
+
+    const reportTypes = [
+        { value: "sales", label: "Sales Report", desc: "Revenue and order summaries" },
+        { value: "orders", label: "Order Details", desc: "Line-by-line order breakdown" },
+        { value: "products", label: "Product Performance", desc: "Units sold and revenue per product" },
+        { value: "customers", label: "Customer Report", desc: "Spending and order history per customer" },
+        { value: "skintypes", label: "Skin Type Insights", desc: "Purchases and revenue by skin type" },
+    ];
+
+    // ────────────────────────────────────────────────────────────────────────────
+
     const logout = () => { localStorage.clear(); navigate("/auth"); };
 
     const statCards = [
@@ -199,15 +396,19 @@ export default function AdminDashboard() {
     return (
         <div className="admin-layout">
             <aside className="admin-sidebar">
-                <div className="admin-brand">SkincareSync</div>
+                {/* Clickable brand → overview */}
+                <div className="admin-brand" onClick={() => setActiveTab("overview")} style={{ cursor: "pointer" }}>
+                    SkincareSync
+                </div>
                 <p className="admin-role-label">Admin Panel</p>
                 <nav className="admin-nav">
-                    {["overview", "orders", "products", "users"].map(tab => (
+                    {["overview", "orders", "products", "users", "reports"].map(tab => (
                         <button
                             key={tab}
                             className={`admin-nav-btn ${activeTab === tab ? "active" : ""}`}
                             onClick={() => setActiveTab(tab)}
                         >
+                            {tabIcons[tab]}
                             {tab.charAt(0).toUpperCase() + tab.slice(1)}
                         </button>
                     ))}
@@ -250,6 +451,7 @@ export default function AdminDashboard() {
                                 </div>
                             ))}
                         </div>
+
                         <div className="analytics-card">
                             <h2 className="analytics-title">Revenue & Orders — Last 7 Days</h2>
                             <ResponsiveContainer width="100%" height={300}>
@@ -264,6 +466,64 @@ export default function AdminDashboard() {
                                     <Line yAxisId="right" type="monotone" dataKey="orders" stroke="#c8956c" strokeWidth={2.5} dot={{ fill: '#c8956c', r: 4 }} activeDot={{ r: 6 }} name="orders" />
                                 </LineChart>
                             </ResponsiveContainer>
+                        </div>
+
+                        {/* RECENT ORDERS */}
+                        <div className="recent-orders-card">
+                            <div className="recent-orders-header">
+                                <h2 className="analytics-title" style={{ margin: 0 }}>Recent Orders</h2>
+                                <button className="recent-orders-viewall" onClick={() => setActiveTab("orders")}>
+                                    View All →
+                                </button>
+                            </div>
+                            {recentOrders.length === 0 ? (
+                                <p style={{ color: 'var(--text-muted)', fontSize: '14px', padding: '20px 0' }}>No orders yet.</p>
+                            ) : (
+                                <table className="admin-table" style={{ marginTop: '16px' }}>
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Items</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentOrders.map(order => (
+                                            <tr key={order._id} className="order-row">
+                                                <td style={{ fontWeight: 600 }}>#{order._id.slice(-8).toUpperCase()}</td>
+                                                <td>
+                                                    <p style={{ fontWeight: 500, margin: 0 }}>{order.deliveryAddress?.fullName}</p>
+                                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{order.userEmail}</p>
+                                                </td>
+                                                <td>
+                                                    <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
+                                                        {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                                                    </span>
+                                                </td>
+                                                <td style={{ fontWeight: 600 }}>Rs. {order.totalAmount.toLocaleString()}</td>
+                                                <td>
+                                                    <span style={{
+                                                        color: statusColor(order.status),
+                                                        fontWeight: 600,
+                                                        fontSize: '13px',
+                                                        background: `${statusColor(order.status)}18`,
+                                                        padding: '3px 10px',
+                                                        borderRadius: '20px'
+                                                    }}>
+                                                        {order.status}
+                                                    </span>
+                                                </td>
+                                                <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                                    {new Date(order.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     </>
                 )}
@@ -295,26 +555,25 @@ export default function AdminDashboard() {
                                                     <button
                                                         onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
                                                         style={{
-                                                            background: expandedOrder === order._id ? '#f5f0eb' : 'none',
-                                                            border: '1px solid #e6e0d9', borderRadius: '6px',
+                                                            background: expandedOrder === order._id ? 'var(--accent-light)' : 'none',
+                                                            border: '1px solid var(--border)', borderRadius: '6px',
                                                             width: '28px', height: '28px', cursor: 'pointer',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                             transition: 'all 0.2s',
-                                                            color: expandedOrder === order._id ? '#8B5E3C' : '#9a8880',
+                                                            color: expandedOrder === order._id ? 'var(--accent)' : 'var(--text-muted)',
                                                             fontSize: '12px', flexShrink: 0
                                                         }}
-                                                        title={expandedOrder === order._id ? 'Collapse' : 'View items'}
                                                     >
                                                         <span className={`order-expand-icon ${expandedOrder === order._id ? 'open' : ''}`}>▸</span>
                                                     </button>
                                                 </td>
                                                 <td style={{ fontWeight: 600 }}>#{order._id.slice(-8).toUpperCase()}</td>
                                                 <td>
-                                                    <p style={{ fontWeight: 500 }}>{order.deliveryAddress.fullName}</p>
-                                                    <p style={{ fontSize: '12px', color: '#888' }}>{order.userEmail}</p>
+                                                    <p style={{ fontWeight: 500, margin: 0 }}>{order.deliveryAddress.fullName}</p>
+                                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{order.userEmail}</p>
                                                 </td>
                                                 <td>
-                                                    <span style={{ background: '#f5f0eb', color: '#6b5d52', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
+                                                    <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
                                                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                                                     </span>
                                                 </td>
@@ -331,16 +590,13 @@ export default function AdminDashboard() {
                                                         ))}
                                                     </select>
                                                 </td>
-                                                <td style={{ fontSize: '13px', color: '#888' }}>
+                                                <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                                                     {new Date(order.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'short', day: 'numeric' })}
                                                 </td>
                                                 <td className="action-cell">
-                                                    <button className="icon-btn delete" onClick={() => deleteOrder(order._id)}>
-                                                        <FiTrash2 />
-                                                    </button>
+                                                    <button className="icon-btn delete" onClick={() => deleteOrder(order._id)}><FiTrash2 /></button>
                                                 </td>
                                             </tr>
-
                                             {expandedOrder === order._id && (
                                                 <tr key={`${order._id}-expanded`} className="order-items-row">
                                                     <td colSpan={8}>
@@ -355,22 +611,17 @@ export default function AdminDashboard() {
                                                                 {order.items.map((item, i) => (
                                                                     <div key={i} className="order-item-expanded">
                                                                         <div className="order-item-img-admin">
-                                                                            {item.imageUrl
-                                                                                ? <img src={item.imageUrl} alt={item.name} />
-                                                                                : <div className="order-item-img-placeholder" />
-                                                                            }
+                                                                            {item.imageUrl ? <img src={item.imageUrl} alt={item.name} /> : <div className="order-item-img-placeholder" />}
                                                                         </div>
                                                                         <div className="order-item-info-admin">
                                                                             <p className="order-item-name-admin">{item.name}</p>
                                                                             <p className="order-item-qty-admin">Qty: {item.quantity} × Rs. {item.price.toLocaleString()}</p>
                                                                         </div>
-                                                                        <p className="order-item-price-admin">
-                                                                            Rs. {(item.price * item.quantity).toLocaleString()}
-                                                                        </p>
+                                                                        <p className="order-item-price-admin">Rs. {(item.price * item.quantity).toLocaleString()}</p>
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #e6e0d9', fontSize: '14px', fontWeight: 700, color: '#3a2e28', gap: '12px' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)', fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', gap: '12px' }}>
                                                                 <span>Order Total</span>
                                                                 <span>Rs. {order.totalAmount.toLocaleString()}</span>
                                                             </div>
@@ -392,12 +643,7 @@ export default function AdminDashboard() {
                         <table className="admin-table">
                             <thead>
                                 <tr>
-                                    <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Brand</th>
-                                    <th>Category</th>
-                                    <th>Price</th>
-                                    <th>Actions</th>
+                                    <th>Image</th><th>Name</th><th>Brand</th><th>Category</th><th>Price</th><th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -406,7 +652,7 @@ export default function AdminDashboard() {
                                         <td>
                                             {p.imageUrl
                                                 ? <img src={p.imageUrl} alt={p.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
-                                                : <div style={{ width: '50px', height: '50px', background: '#f2f2f2', borderRadius: '8px' }} />
+                                                : <div style={{ width: '50px', height: '50px', background: 'var(--bg-subtle)', borderRadius: '8px' }} />
                                             }
                                         </td>
                                         <td style={{ fontWeight: 500 }}>{p.name}</td>
@@ -429,11 +675,7 @@ export default function AdminDashboard() {
                     <div className="admin-table-wrapper">
                         <table className="admin-table">
                             <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Actions</th>
-                                </tr>
+                                <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
                                 {users.map(u => (
@@ -447,6 +689,100 @@ export default function AdminDashboard() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* REPORTS */}
+                {activeTab === "reports" && (
+                    <div className="reports-page">
+
+                        {/* Report Type Cards */}
+                        <div className="report-type-grid">
+                            {reportTypes.map(rt => (
+                                <div
+                                    key={rt.value}
+                                    className={`report-type-card ${reportType === rt.value ? "active" : ""}`}
+                                    onClick={() => { setReportType(rt.value); setReportGenerated(false); }}
+                                >
+                                    <p className="report-type-label">{rt.label}</p>
+                                    <p className="report-type-desc">{rt.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Filters */}
+                        <div className="report-filters-card">
+                            <h3 className="report-section-title">Filters</h3>
+                            <div className="report-filters-row">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>From Date</label>
+                                    <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setReportGenerated(false); }} />
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>To Date</label>
+                                    <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setReportGenerated(false); }} />
+                                </div>
+                                <button className="btn-generate-report" onClick={generateReport} disabled={generatingReport}>
+                                    {generatingReport ? "Generating..." : "Generate Report"}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Preview Table */}
+                        {reportGenerated && (
+                            <>
+                                <div className="report-preview-card">
+                                    <div className="report-preview-header">
+                                        <h3 className="report-section-title" style={{ margin: 0 }}>
+                                            Preview — {reportTypes.find(r => r.value === reportType)?.label}
+                                            <span style={{ fontWeight: 400, fontSize: '13px', color: 'var(--text-muted)', marginLeft: '10px' }}>
+                                                {reportData.length} row{reportData.length !== 1 ? "s" : ""}
+                                            </span>
+                                        </h3>
+                                        <div className="report-download-btns">
+                                            <button className="btn-download csv" onClick={downloadCSV}>
+                                                ↓ Download CSV
+                                            </button>
+                                            <button className="btn-download excel" onClick={downloadExcel}>
+                                                ↓ Download Excel
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {reportData.length === 0 ? (
+                                        <p style={{ color: 'var(--text-muted)', padding: '24px 0', fontSize: '14px' }}>
+                                            No data found for the selected filters.
+                                        </p>
+                                    ) : (
+                                        <div className="report-table-wrapper">
+                                            <table className="admin-table report-table">
+                                                <thead>
+                                                    <tr>
+                                                        {Object.keys(reportData[0]).map(col => (
+                                                            <th key={col}>{col}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {reportData.slice(0, 50).map((row, i) => (
+                                                        <tr key={i}>
+                                                            {Object.values(row).map((val, j) => (
+                                                                <td key={j}>{String(val)}</td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            {reportData.length > 50 && (
+                                                <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>
+                                                    Showing first 50 rows. Download for full data.
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </main>
@@ -487,7 +823,7 @@ export default function AdminDashboard() {
                             <div className="form-group">
                                 <label>Product Image</label>
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
-                                {uploadingImage && <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>}
+                                {uploadingImage && <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>Uploading image...</p>}
                                 {productForm.imageUrl && (
                                     <img src={productForm.imageUrl} alt="Preview" style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
                                 )}

@@ -5,19 +5,29 @@
     background: var(--bg-secondary);
 }
 
-/* SIDEBAR */
+/* SIDEBAR — fixed, never scrolls */
 .admin-sidebar {
     width: 220px;
-    min-height: 100vh;
     height: 100vh;
-    overflow: hidden;
     background: var(--bg-card);
     border-right: 1px solid var(--border-light);
     padding: 36px 24px;
     display: flex;
     flex-direction: column;
-    position: sticky;
+    position: fixed;       /* ← fixed, not sticky */
     top: 0;
+    left: 0;
+    overflow: hidden;      /* ← never scrolls */
+    z-index: 100;
+}
+
+/* MAIN — offset by sidebar width */
+.admin-main {
+    flex: 1;
+    margin-left: 220px;    /* ← push content right of fixed sidebar */
+    padding: 40px 48px;
+    min-height: 100vh;
+    overflow-y: auto;
 }
 
 .admin-brand {
@@ -40,6 +50,7 @@
     flex: 1;
 }
 
+/* Nav buttons with icons */
 .admin-nav-btn {
     text-align: left;
     padding: 10px 14px;
@@ -51,6 +62,9 @@
     cursor: pointer;
     transition: all 0.2s;
     text-transform: capitalize;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .admin-nav-btn:hover {
@@ -82,12 +96,7 @@
     background: var(--accent-light);
 }
 
-/* MAIN */
-.admin-main {
-    flex: 1;
-    padding: 40px 48px;
-}
-
+/* TOPBAR */
 .admin-topbar {
     display: flex;
     justify-content: space-between;
@@ -129,6 +138,7 @@
     background: var(--accent-light);
     padding: 12px;
     border-radius: 10px;
+    flex-shrink: 0;
 }
 
 .stat-value {
@@ -199,22 +209,10 @@
     transition: background 0.2s, color 0.2s;
 }
 
-.icon-btn.edit {
-    color: var(--accent);
-}
-
-.icon-btn.edit:hover {
-    background: var(--accent-light);
-}
-
-.icon-btn.delete {
-    color: var(--text-muted);
-}
-
-.icon-btn.delete:hover {
-    background: var(--accent-light);
-    color: #e63946;
-}
+.icon-btn.edit { color: var(--accent); }
+.icon-btn.edit:hover { background: var(--accent-light); }
+.icon-btn.delete { color: var(--text-muted); }
+.icon-btn.delete:hover { background: var(--accent-light); color: #e63946; }
 
 /* ADD BUTTON */
 .btn-admin-add {
@@ -231,9 +229,7 @@
     transition: opacity 0.2s;
 }
 
-.btn-admin-add:hover {
-    opacity: 0.88;
-}
+.btn-admin-add:hover { opacity: 0.88; }
 
 /* MODAL */
 .modal-overlay {
@@ -280,9 +276,7 @@
     transition: color 0.2s;
 }
 
-.modal-close:hover {
-    color: var(--text-primary);
-}
+.modal-close:hover { color: var(--text-primary); }
 
 .modal-body {
     display: flex;
@@ -308,9 +302,7 @@
     transition: background 0.2s;
 }
 
-.btn-modal-cancel:hover {
-    background: var(--border-light);
-}
+.btn-modal-cancel:hover { background: var(--border-light); }
 
 .btn-modal-save {
     padding: 10px 20px;
@@ -323,16 +315,10 @@
     transition: opacity 0.2s;
 }
 
-.btn-modal-save:hover {
-    opacity: 0.88;
-}
+.btn-modal-save:hover { opacity: 0.88; }
+.btn-modal-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-modal-save:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* FORM FIELDS inside modal */
+/* FORM GROUPS */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -386,9 +372,7 @@
     transition: border-color 0.2s;
 }
 
-.status-select:focus {
-    outline: none;
-}
+.status-select:focus { outline: none; }
 
 /* STAT CARDS CLICKABLE */
 .stat-card-clickable {
@@ -434,17 +418,9 @@
 }
 
 /* ORDER ROWS */
-.order-row {
-    transition: background 0.15s;
-}
-
-.order-row:hover {
-    background: var(--bg-subtle);
-}
-
-.order-row-expanded {
-    background: var(--bg-subtle);
-}
+.order-row { transition: background 0.15s; }
+.order-row:hover { background: var(--bg-subtle); }
+.order-row-expanded { background: var(--bg-subtle); }
 
 .order-expand-icon {
     font-size: 12px;
@@ -549,15 +525,199 @@
     white-space: nowrap;
 }
 
+/* RECENT ORDERS CARD */
+.recent-orders-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    border: 1px solid var(--border-light);
+    padding: 28px;
+    margin-top: 24px;
+    overflow: hidden;
+}
 
+.recent-orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
+.recent-orders-viewall {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.recent-orders-viewall:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+}
+
+/* REPORTS PAGE */
+.reports-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.report-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.report-type-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.report-type-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.report-type-card.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.report-type-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.report-type-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.report-filters-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 24px;
+}
+
+.report-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.report-filters-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.btn-generate-report {
+    padding: 10px 22px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    height: 42px;
+}
+
+.btn-generate-report:hover { opacity: 0.88; }
+.btn-generate-report:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.report-preview-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 24px;
+}
+
+.report-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.report-download-btns {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-download {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-download.csv {
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.btn-download.excel {
+    background: #1d6f42;
+    color: #fff;
+}
+
+.btn-download:hover { opacity: 0.85; }
+
+/* Report table — scrollable horizontally, long text wraps */
+.report-table-wrapper {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    max-width: 100%;
+}
+
+.report-table th,
+.report-table td {
+    white-space: nowrap;        /* keeps short columns tight */
+    max-width: 240px;           /* cap column width */
+    overflow: hidden;
+    text-overflow: ellipsis;    /* long product names get "..." */
+}
+
+/* Product name column specifically — allow wrap */
+.report-table td:nth-child(3),
+.report-table th:nth-child(3) {
+    white-space: normal;
+    min-width: 200px;
+    max-width: 300px;
+    word-break: break-word;
+}
+
+/* SIDEBAR FOOTER */
 .admin-sidebar-footer {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-top: 8px;
-    padding-top: 12px;
-    border-top: 1px solid #eee;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+    margin-top: auto;
 }
 
 .admin-theme-btn {
@@ -569,13 +729,10 @@
     background: none;
     border-radius: 10px;
     font-size: 14px;
-    color: #555;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: background 0.2s;
-    width: 100%;
+    text-align: left;
 }
 
-.admin-theme-btn:hover {
-    background: #f5f0eb;
-    color: #333;
-}
+.admin-theme-btn:hover { background: var(--bg-subtle); }
