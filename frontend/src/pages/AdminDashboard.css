@@ -548,3 +548,34 @@
     color: var(--text-secondary);
     white-space: nowrap;
 }
+
+
+
+.admin-sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.admin-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+}
+
+.admin-theme-btn:hover {
+    background: #f5f0eb;
+    color: #333;
+}

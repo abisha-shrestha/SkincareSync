@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut } from "react-icons/fi";
+import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut, FiSun, FiMoon } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { useTheme } from "../ThemeContext";
 import "./AdminDashboard.css";
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
     const [activeTab, setActiveTab] = useState("overview");
     const [stats, setStats] = useState({});
     const [users, setUsers] = useState([]);
@@ -36,9 +38,9 @@ export default function AdminDashboard() {
         const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
         if (!token || role !== "admin") navigate("/auth");
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    useEffect(() => { fetchStats(); fetchAnalytics(); }, []);
+    useEffect(() => { fetchStats(); fetchAnalytics(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => { if (activeTab === "users") fetchUsers(); }, [activeTab]);
     useEffect(() => { if (activeTab === "products") fetchProducts(); }, [activeTab]);
     useEffect(() => { if (activeTab === "orders") fetchOrders(); }, [activeTab]);
@@ -87,16 +89,14 @@ export default function AdminDashboard() {
     const deleteUser = async (id) => {
         if (!window.confirm("Delete this user?")) return;
         await fetch(`http://localhost:3000/api/admin/users/${id}`, { method: "DELETE", headers: getHeaders() });
-        fetchUsers();
-        fetchStats();
+        fetchUsers(); fetchStats();
         toast.success("User deleted");
     };
 
     const deleteProduct = async (id) => {
         if (!window.confirm("Delete this product?")) return;
         await fetch(`http://localhost:3000/api/admin/products/${id}`, { method: "DELETE", headers: getHeaders() });
-        fetchProducts();
-        fetchStats();
+        fetchProducts(); fetchStats();
         toast.success("Product deleted");
     };
 
@@ -106,16 +106,14 @@ export default function AdminDashboard() {
             headers: getHeaders(),
             body: JSON.stringify({ status })
         });
-        fetchOrders();
-        fetchStats();
+        fetchOrders(); fetchStats();
         toast.success(`Order marked as ${status}`);
     };
 
     const deleteOrder = async (id) => {
         if (!window.confirm("Delete this order?")) return;
         await fetch(`http://localhost:3000/api/orders/${id}`, { method: "DELETE", headers: getHeaders() });
-        fetchOrders();
-        fetchStats();
+        fetchOrders(); fetchStats();
         toast.success("Order deleted");
     };
 
@@ -128,13 +126,9 @@ export default function AdminDashboard() {
     const openEditProduct = (product) => {
         setEditingProduct(product);
         setProductForm({
-            name: product.name,
-            brand: product.brand || "",
-            price: product.price,
-            category: product.category || "",
-            description: product.description || "",
-            skinTypes: (product.skinTypes || []).join(", "),
-            imageUrl: product.imageUrl || ""
+            name: product.name, brand: product.brand || "", price: product.price,
+            category: product.category || "", description: product.description || "",
+            skinTypes: (product.skinTypes || []).join(", "), imageUrl: product.imageUrl || ""
         });
         setShowProductModal(true);
     };
@@ -152,24 +146,16 @@ export default function AdminDashboard() {
                 body: formData
             });
             const data = await res.json();
-            if (data.success) {
-                setProductForm(prev => ({ ...prev, imageUrl: data.imageUrl }));
-                toast.success("Image uploaded");
-            } else {
-                toast.error("Image upload failed");
-            }
-        } catch (err) {
-            toast.error("Image upload error");
-        } finally {
-            setUploadingImage(false);
-        }
+            if (data.success) { setProductForm(prev => ({ ...prev, imageUrl: data.imageUrl })); toast.success("Image uploaded"); }
+            else toast.error("Image upload failed");
+        } catch (err) { toast.error("Image upload error"); }
+        finally { setUploadingImage(false); }
     };
 
     const saveProduct = async () => {
         if (!productForm.name.trim()) { toast.error("Product name is required"); return; }
         if (!productForm.brand.trim()) { toast.error("Brand is required"); return; }
         if (!productForm.price) { toast.error("Price is required"); return; }
-
         const body = {
             ...productForm,
             price: Number(productForm.price),
@@ -181,8 +167,7 @@ export default function AdminDashboard() {
         const method = editingProduct ? "PUT" : "POST";
         await fetch(url, { method, headers: getHeaders(), body: JSON.stringify(body) });
         setShowProductModal(false);
-        fetchProducts();
-        fetchStats();
+        fetchProducts(); fetchStats();
         toast.success(editingProduct ? "Product updated" : "Product added");
     };
 
@@ -198,8 +183,8 @@ export default function AdminDashboard() {
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
-                <div style={{ background: 'white', border: '1px solid #eee', borderRadius: '10px', padding: '12px 16px', fontSize: '13px' }}>
-                    <p style={{ fontWeight: 600, marginBottom: '6px', color: '#3a2e28' }}>{label}</p>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', fontSize: '13px' }}>
+                    <p style={{ fontWeight: 600, marginBottom: '6px', color: 'var(--text-primary)' }}>{label}</p>
                     {payload.map((p, i) => (
                         <p key={i} style={{ color: p.color, margin: '2px 0' }}>
                             {p.name === 'revenue' ? `Revenue: Rs. ${p.value.toLocaleString()}` : `Orders: ${p.value}`}
@@ -227,9 +212,15 @@ export default function AdminDashboard() {
                         </button>
                     ))}
                 </nav>
-                <button className="admin-logout-btn" onClick={logout}>
-                    <FiLogOut /> Logout
-                </button>
+                <div className="admin-sidebar-footer">
+                    <button className="admin-theme-btn" onClick={toggleTheme} title="Toggle theme">
+                        {theme === 'light' ? <FiMoon size={15} /> : <FiSun size={15} />}
+                        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                    </button>
+                    <button className="admin-logout-btn" onClick={logout}>
+                        <FiLogOut /> Logout
+                    </button>
+                </div>
             </aside>
 
             <main className="admin-main">
@@ -249,12 +240,7 @@ export default function AdminDashboard() {
                     <>
                         <div className="admin-stats-grid">
                             {statCards.map((card) => (
-                                <div
-                                    key={card.label}
-                                    className="stat-card stat-card-clickable"
-                                    onClick={() => setActiveTab(card.tab)}
-                                    title={`Go to ${card.tab}`}
-                                >
+                                <div key={card.label} className="stat-card stat-card-clickable" onClick={() => setActiveTab(card.tab)}>
                                     <div className="stat-icon">{card.icon}</div>
                                     <div>
                                         <p className="stat-value">{loading ? "..." : card.value}</p>
@@ -264,15 +250,14 @@ export default function AdminDashboard() {
                                 </div>
                             ))}
                         </div>
-
                         <div className="analytics-card">
                             <h2 className="analytics-title">Revenue & Orders — Last 7 Days</h2>
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={analytics} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0ebe6" />
-                                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9a8880' }} axisLine={false} tickLine={false} />
-                                    <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#9a8880' }} axisLine={false} tickLine={false} />
-                                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: '#9a8880' }} axisLine={false} tickLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                                    <YAxis yAxisId="left" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '16px' }} />
                                     <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#6b5d52" strokeWidth={2.5} dot={{ fill: '#6b5d52', r: 4 }} activeDot={{ r: 6 }} name="revenue" />
@@ -305,27 +290,18 @@ export default function AdminDashboard() {
                                 <tbody>
                                     {orders.map(order => (
                                         <>
-                                            <tr
-                                                key={order._id}
-                                                className={`order-row ${expandedOrder === order._id ? 'order-row-expanded' : ''}`}
-                                            >
+                                            <tr key={order._id} className={`order-row ${expandedOrder === order._id ? 'order-row-expanded' : ''}`}>
                                                 <td style={{ textAlign: 'center', padding: '14px 8px' }}>
                                                     <button
                                                         onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
                                                         style={{
                                                             background: expandedOrder === order._id ? '#f5f0eb' : 'none',
-                                                            border: '1px solid #e6e0d9',
-                                                            borderRadius: '6px',
-                                                            width: '28px',
-                                                            height: '28px',
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
+                                                            border: '1px solid #e6e0d9', borderRadius: '6px',
+                                                            width: '28px', height: '28px', cursor: 'pointer',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                             transition: 'all 0.2s',
                                                             color: expandedOrder === order._id ? '#8B5E3C' : '#9a8880',
-                                                            fontSize: '12px',
-                                                            flexShrink: 0
+                                                            fontSize: '12px', flexShrink: 0
                                                         }}
                                                         title={expandedOrder === order._id ? 'Collapse' : 'View items'}
                                                     >
@@ -438,12 +414,8 @@ export default function AdminDashboard() {
                                         <td>{p.category || "—"}</td>
                                         <td>Rs. {p.price?.toLocaleString()}</td>
                                         <td className="action-cell">
-                                            <button className="icon-btn edit" onClick={() => openEditProduct(p)}>
-                                                <FiEdit2 />
-                                            </button>
-                                            <button className="icon-btn delete" onClick={() => deleteProduct(p._id)}>
-                                                <FiTrash2 />
-                                            </button>
+                                            <button className="icon-btn edit" onClick={() => openEditProduct(p)}><FiEdit2 /></button>
+                                            <button className="icon-btn delete" onClick={() => deleteProduct(p._id)}><FiTrash2 /></button>
                                         </td>
                                     </tr>
                                 ))}
@@ -469,9 +441,7 @@ export default function AdminDashboard() {
                                         <td>{u.name}</td>
                                         <td>{u.email}</td>
                                         <td className="action-cell">
-                                            <button className="icon-btn delete" onClick={() => deleteUser(u._id)}>
-                                                <FiTrash2 />
-                                            </button>
+                                            <button className="icon-btn delete" onClick={() => deleteUser(u._id)}><FiTrash2 /></button>
                                         </td>
                                     </tr>
                                 ))}
@@ -487,87 +457,41 @@ export default function AdminDashboard() {
                     <div className="modal">
                         <div className="modal-header">
                             <h2>{editingProduct ? "Edit Product" : "Add Product"}</h2>
-                            <button className="modal-close" onClick={() => setShowProductModal(false)}>
-                                <FiX />
-                            </button>
+                            <button className="modal-close" onClick={() => setShowProductModal(false)}><FiX /></button>
                         </div>
                         <div className="modal-body">
-
                             <div className="form-group">
                                 <label>Name <span style={{ color: '#e63946' }}>*</span></label>
-                                <input
-                                    type="text"
-                                    value={productForm.name}
-                                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                                    placeholder="e.g. Niacinamide Serum"
-                                />
+                                <input type="text" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} placeholder="e.g. Niacinamide Serum" />
                             </div>
-
                             <div className="form-group">
                                 <label>Brand <span style={{ color: '#e63946' }}>*</span></label>
-                                <input
-                                    type="text"
-                                    value={productForm.brand}
-                                    onChange={e => setProductForm({ ...productForm, brand: e.target.value })}
-                                    placeholder="e.g. The Ordinary"
-                                />
+                                <input type="text" value={productForm.brand} onChange={e => setProductForm({ ...productForm, brand: e.target.value })} placeholder="e.g. The Ordinary" />
                             </div>
-
                             <div className="form-group">
                                 <label>Price <span style={{ color: '#e63946' }}>*</span></label>
-                                <input
-                                    type="number"
-                                    value={productForm.price}
-                                    onChange={e => setProductForm({ ...productForm, price: e.target.value })}
-                                    placeholder="e.g. 1500"
-                                />
+                                <input type="number" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} placeholder="e.g. 1500" />
                             </div>
-
                             <div className="form-group">
                                 <label>Category</label>
-                                <input
-                                    type="text"
-                                    value={productForm.category}
-                                    onChange={e => setProductForm({ ...productForm, category: e.target.value })}
-                                    placeholder="e.g. Serum"
-                                />
+                                <input type="text" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} placeholder="e.g. Serum" />
                             </div>
-
                             <div className="form-group">
                                 <label>Description</label>
-                                <input
-                                    type="text"
-                                    value={productForm.description}
-                                    onChange={e => setProductForm({ ...productForm, description: e.target.value })}
-                                    placeholder="Short product description"
-                                />
+                                <input type="text" value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} placeholder="Short product description" />
                             </div>
-
                             <div className="form-group">
                                 <label>Skin Types <span style={{ color: '#9a8880', fontWeight: 400, fontSize: '12px' }}>(comma separated)</span></label>
-                                <input
-                                    type="text"
-                                    value={productForm.skinTypes}
-                                    onChange={e => setProductForm({ ...productForm, skinTypes: e.target.value })}
-                                    placeholder="e.g. Oily, Dry, Combination"
-                                />
+                                <input type="text" value={productForm.skinTypes} onChange={e => setProductForm({ ...productForm, skinTypes: e.target.value })} placeholder="e.g. Oily, Dry, Combination" />
                             </div>
-
                             <div className="form-group">
                                 <label>Product Image</label>
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
-                                {uploadingImage && (
-                                    <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>
-                                )}
+                                {uploadingImage && <p style={{ fontSize: '13px', color: '#888', marginTop: '6px' }}>Uploading image...</p>}
                                 {productForm.imageUrl && (
-                                    <img
-                                        src={productForm.imageUrl}
-                                        alt="Preview"
-                                        style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }}
-                                    />
+                                    <img src={productForm.imageUrl} alt="Preview" style={{ marginTop: '10px', width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
                                 )}
                             </div>
-
                         </div>
                         <div className="modal-footer">
                             <button className="btn-modal-cancel" onClick={() => setShowProductModal(false)}>Cancel</button>

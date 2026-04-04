@@ -52,14 +52,12 @@ const placeOrder = async (req, res) => {
         let items;
 
         if (isBuyNow) {
-            // Buy Now: use the items sent directly, never touch the cart
             if (!incomingItems || incomingItems.length === 0) {
                 return res.status(400).json({ success: false, message: 'No items provided' });
             }
             items = incomingItems;
 
         } else if (incomingItems && incomingItems.length > 0) {
-            // Selective cart checkout: use the explicitly sent items
             items = incomingItems;
 
             // Only remove the ordered items from the cart, leave the rest
@@ -73,7 +71,6 @@ const placeOrder = async (req, res) => {
             }
 
         } else {
-            // Fallback: old behaviour — use full cart and clear it
             const cart = await Cart.findOne({ userId: userEmail }).populate('items.productId');
             if (!cart || cart.items.length === 0) {
                 return res.status(400).json({ success: false, message: 'Cart is empty' });
