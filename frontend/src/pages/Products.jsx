@@ -5,11 +5,27 @@ import Footer from "../components/Footer/Footer";
 import ProductGrid from "../components/ProductGrid/ProductGrid";
 import "../components/ProductGrid/ProductGrid.css";
 
+const BANNERS = [
+    { emoji: "🚚", text: "Free delivery on orders above", highlight: "Rs. 3,000" },
+    { emoji: "✨", text: "New arrivals added every week —", highlight: "Shop fresh picks" },
+    { emoji: "🌿", text: "Clean ingredients, real results —", highlight: "Honest skincare only" },
+    { emoji: "💌", text: "Take the quiz and find your", highlight: "perfect routine" },
+];
+
 export default function Products() {
     const location = useLocation();
     const [skinType, setSkinType] = useState(null);
     const [skinTypeActive, setSkinTypeActive] = useState(false);
+    const [bannerIndex, setBannerIndex] = useState(0);
     const userEmail = localStorage.getItem('email');
+
+    // Rotate banners every 4 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setBannerIndex(i => (i + 1) % BANNERS.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const loadSkinType = async () => {
@@ -40,9 +56,20 @@ export default function Products() {
         normal: 'Normal Skin', sensitive: 'Sensitive Skin'
     };
 
+    const banner = BANNERS[bannerIndex];
+
     return (
         <>
             <Navbar />
+
+            {/* Promotional banner */}
+            <div className="promo-banner">
+                <span className="promo-banner-inner">
+                    <span className="promo-emoji">{banner.emoji}</span>
+                    {banner.text} <strong>{banner.highlight}</strong>
+                </span>
+            </div>
+
             <section className="products-page">
                 <div className="products-header">
                     <p className="label">Our Collection</p>

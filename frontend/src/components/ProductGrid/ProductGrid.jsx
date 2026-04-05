@@ -1,93 +1,3 @@
-// import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-// import "./ProductGrid.css";
-
-// export default function ProductGrid({ limit, skinTypeFilter }) {
-//     const navigate = useNavigate();
-//     const [allProducts, setAllProducts] = useState([]);
-//     const [activeCategory, setActiveCategory] = useState("All");
-//     const [loading, setLoading] = useState(true);
-
-//     useEffect(() => {
-//         fetch('http://localhost:3000/api/products')
-//             .then(res => res.json())
-//             .then(data => {
-//                 setAllProducts(data.products || data || []);
-//                 setLoading(false);
-//             })
-//             .catch(err => {
-//                 console.error('Error:', err);
-//                 setLoading(false);
-//             });
-//     }, []);
-
-//     // Apply skin type filter first, then category filter on top
-//     const skinFiltered = skinTypeFilter
-//         ? allProducts.filter(product =>
-//             product.skinTypes && product.skinTypes.some(t =>
-//                 t.toLowerCase() === skinTypeFilter.toLowerCase()
-//             )
-//         )
-//         : allProducts;
-
-//     const categoryFiltered = activeCategory === "All"
-//         ? skinFiltered
-//         : skinFiltered.filter(product => product.category === activeCategory);
-
-//     const displayedProducts = limit ? categoryFiltered.slice(0, limit) : categoryFiltered;
-
-//     if (loading) return <div style={{ padding: '60px', textAlign: 'center', color: '#9a8880' }}>Loading products...</div>;
-
-//     return (
-//         <>
-//             {!limit && (
-//                 <div className="products-filters">
-//                     {["All", "Cleanser", "Toner", "Moisturizer", "Sunscreen", ].map(category => (
-//                         <button
-//                             key={category}
-//                             className={`filter-btn ${activeCategory === category ? "active" : ""}`}
-//                             onClick={() => setActiveCategory(category)}
-//                         >
-//                             {category}
-//                         </button>
-//                     ))}
-//                 </div>
-//             )}
-
-//             {!loading && displayedProducts.length === 0 && (
-//                 <div style={{ textAlign: 'center', padding: '60px', color: '#9a8880' }}>
-//                     <p style={{ fontSize: '16px', marginBottom: '8px' }}>No products found for your skin type in this category.</p>
-//                     <p style={{ fontSize: '14px' }}>Try switching the category or clearing the skin type filter.</p>
-//                 </div>
-//             )}
-
-//             <div className="products-grid">
-//                 {displayedProducts.map(product => (
-//                     <div
-//                         key={product._id}
-//                         className="product-card"
-//                         onClick={() => navigate(`/product/${product._id}`)}
-//                         style={{ cursor: 'pointer' }}
-//                     >
-//                         <div className="product-image">
-//                             {product.imageUrl
-//                                 ? <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
-//                                 : null
-//                             }
-//                         </div>
-//                         <h3>{product.name}</h3>
-//                         <p className="product-price">Rs. {product.price.toLocaleString()}</p>
-//                         <button className="btn btn-soft">View Details</button>
-//                     </div>
-//                 ))}
-//             </div>
-//         </>
-//     );
-// }
-
-
-
-
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiStar, FiChevronDown, FiChevronUp, FiSliders, FiX } from "react-icons/fi";
@@ -104,6 +14,7 @@ const SORT_OPTIONS = [
 ];
 
 function StarDisplay({ rating }) {
+    if (!rating || rating === 0) return null;
     return (
         <div className="pg-stars">
             {[1, 2, 3, 4, 5].map(n => (
@@ -116,7 +27,7 @@ function StarDisplay({ rating }) {
                     }}
                 />
             ))}
-            <span className="pg-rating-text">{rating > 0 ? rating.toFixed(1) : "No reviews"}</span>
+            <span className="pg-rating-text">{rating.toFixed(1)}</span>
         </div>
     );
 }
@@ -134,8 +45,6 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
     const [priceRange, setPriceRange] = useState([0, 50000]);
     const [minRating, setMinRating] = useState(0);
     const [sortBy, setSortBy] = useState("default");
-
-    // Derived
     const [maxPrice, setMaxPrice] = useState(50000);
     const [brandOpen, setBrandOpen] = useState(false);
 
@@ -154,13 +63,10 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
             .catch(err => { console.error('Error:', err); setLoading(false); });
     }, []);
 
-    // All unique brands from products
     const allBrands = useMemo(() => {
-        const brands = [...new Set(allProducts.map(p => p.brand).filter(Boolean))].sort();
-        return brands;
+        return [...new Set(allProducts.map(p => p.brand).filter(Boolean))].sort();
     }, [allProducts]);
 
-    // Count active filters
     const activeFilterCount = [
         activeCategory !== "All",
         activeSkinType !== "All" && !skinTypeFilter,
@@ -178,43 +84,35 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         setSortBy("default");
     };
 
-    // Filter + sort pipeline
     const displayedProducts = useMemo(() => {
         let result = [...allProducts];
 
-        // Skin type from parent (banner toggle)
         if (skinTypeFilter) {
             result = result.filter(p =>
                 p.skinTypes?.some(t => t.toLowerCase() === skinTypeFilter.toLowerCase())
             );
         }
 
-        // Category
         if (activeCategory !== "All") {
             result = result.filter(p => p.category === activeCategory);
         }
 
-        // Skin type from filter panel (only if no parent filter)
         if (!skinTypeFilter && activeSkinType !== "All") {
             result = result.filter(p =>
                 p.skinTypes?.some(t => t.toLowerCase() === activeSkinType.toLowerCase())
             );
         }
 
-        // Brand
         if (activeBrand !== "All") {
             result = result.filter(p => p.brand === activeBrand);
         }
 
-        // Price
         result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
 
-        // Rating
         if (minRating > 0) {
             result = result.filter(p => (p.averageRating || 0) >= minRating);
         }
 
-        // Sort
         if (sortBy === "price_asc") result.sort((a, b) => a.price - b.price);
         else if (sortBy === "price_desc") result.sort((a, b) => b.price - a.price);
         else if (sortBy === "rating_desc") result.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
@@ -229,7 +127,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         </div>
     );
 
-    // For home page (limit mode) — simple grid, no filters
+    // Home page — simple grid, no filters
     if (limit) {
         return (
             <div className="products-grid">
@@ -246,7 +144,9 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
                             )}
                         </div>
+                        {product.brand && <p className="product-brand">{product.brand}</p>}
                         <h3>{product.name}</h3>
+                        <StarDisplay rating={product.averageRating || 0} />
                         <p className="product-price">Rs. {product.price.toLocaleString()}</p>
                         <button className="btn btn-soft">View Details</button>
                     </div>
@@ -305,7 +205,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                     </div>
                 </div>
 
-                {/* Skin Type — hidden if parent is controlling it */}
+                {/* Skin Type — hidden if parent banner is controlling it */}
                 {!skinTypeFilter && (
                     <div className="filter-section">
                         <p className="filter-section-title">Skin Type</p>
@@ -327,14 +227,14 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                 {allBrands.length > 0 && (
                     <div className="filter-section">
                         <button
-                            className="filter-section-title filter-collapsible"
+                            className="filter-collapsible"
                             onClick={() => setBrandOpen(o => !o)}
                         >
                             Brand
                             {brandOpen ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
                         </button>
                         {brandOpen && (
-                            <div className="filter-chip-group">
+                            <div className="filter-chip-group" style={{ marginTop: '10px' }}>
                                 <button
                                     className={`filter-chip ${activeBrand === "All" ? "active" : ""}`}
                                     onClick={() => setActiveBrand("All")}
@@ -363,32 +263,51 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                             Rs. {priceRange[0].toLocaleString()} — Rs. {priceRange[1].toLocaleString()}
                         </span>
                     </p>
-                    <div className="filter-range-track">
-                        <input
-                            type="range"
-                            min={0}
-                            max={maxPrice}
-                            step={100}
-                            value={priceRange[0]}
-                            onChange={e => {
-                                const val = Number(e.target.value);
-                                if (val < priceRange[1]) setPriceRange([val, priceRange[1]]);
-                            }}
-                            className="filter-range-input"
-                        />
-                        <input
-                            type="range"
-                            min={0}
-                            max={maxPrice}
-                            step={100}
-                            value={priceRange[1]}
-                            onChange={e => {
-                                const val = Number(e.target.value);
-                                if (val > priceRange[0]) setPriceRange([priceRange[0], val]);
-                            }}
-                            className="filter-range-input"
-                        />
+                    <div className="filter-price-inputs">
+                        <div className="filter-price-input-wrap">
+                            <span className="filter-price-prefix">Rs.</span>
+                            <input
+                                type="number"
+                                className="filter-price-input"
+                                value={priceRange[0]}
+                                min={0}
+                                max={priceRange[1] - 100}
+                                step={100}
+                                onChange={e => {
+                                    const val = Number(e.target.value);
+                                    if (val < priceRange[1]) setPriceRange([val, priceRange[1]]);
+                                }}
+                            />
+                        </div>
+                        <span className="filter-price-sep">—</span>
+                        <div className="filter-price-input-wrap">
+                            <span className="filter-price-prefix">Rs.</span>
+                            <input
+                                type="number"
+                                className="filter-price-input"
+                                value={priceRange[1]}
+                                min={priceRange[0] + 100}
+                                max={maxPrice}
+                                step={100}
+                                onChange={e => {
+                                    const val = Number(e.target.value);
+                                    if (val > priceRange[0]) setPriceRange([priceRange[0], val]);
+                                }}
+                            />
+                        </div>
                     </div>
+                    <input
+                        type="range"
+                        min={0}
+                        max={maxPrice}
+                        step={100}
+                        value={priceRange[1]}
+                        onChange={e => {
+                            const val = Number(e.target.value);
+                            if (val > priceRange[0]) setPriceRange([priceRange[0], val]);
+                        }}
+                        className="filter-single-range"
+                    />
                     <div className="filter-range-labels">
                         <span>Rs. 0</span>
                         <span>Rs. {maxPrice.toLocaleString()}</span>
@@ -406,8 +325,8 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                                 onClick={() => setMinRating(star)}
                             >
                                 {star === 0 ? "Any" : (
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        {star}+ <FiStar size={12} style={{ fill: 'var(--accent)', color: 'var(--accent)' }} />
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                        {star}+ <FiStar size={11} style={{ fill: 'currentColor' }} />
                                     </span>
                                 )}
                             </button>
@@ -420,7 +339,6 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
             {/* ── PRODUCTS AREA ── */}
             <div className="products-main">
 
-                {/* Topbar: toggle + results count */}
                 <div className="products-topbar">
                     <button
                         className="filters-toggle-btn"
