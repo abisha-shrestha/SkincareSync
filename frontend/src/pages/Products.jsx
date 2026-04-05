@@ -18,7 +18,6 @@ export default function Products() {
                 setSkinTypeActive(true);
                 return;
             }
-
             if (userEmail) {
                 try {
                     const res = await fetch(`http://localhost:3000/api/profile/skin-type?userEmail=${userEmail}`);
@@ -27,30 +26,19 @@ export default function Products() {
                         setSkinType(data.skinType);
                         setSkinTypeActive(true);
                     }
-                } catch (err) {
-                    console.error(err);
-                }
+                } catch (err) { console.error(err); }
             } else {
                 const session = sessionStorage.getItem('skinType');
-                if (session) {
-                    setSkinType(session);
-                    setSkinTypeActive(true);
-                }
+                if (session) { setSkinType(session); setSkinTypeActive(true); }
             }
         };
         loadSkinType();
     }, []);
 
     const skinTypeLabels = {
-        dry: 'Dry Skin',
-        oily: 'Oily Skin',
-        combination: 'Combination Skin',
-        normal: 'Normal Skin',
-        sensitive: 'Sensitive Skin'
+        dry: 'Dry Skin', oily: 'Oily Skin', combination: 'Combination Skin',
+        normal: 'Normal Skin', sensitive: 'Sensitive Skin'
     };
-
-    const handleClearSkinType = () => setSkinTypeActive(false);
-    const handleRestoreSkinType = () => { if (skinType) setSkinTypeActive(true); };
 
     return (
         <>
@@ -72,16 +60,14 @@ export default function Products() {
                                     Showing products for your skin type:
                                     <strong> {skinTypeLabels[skinType]}</strong>
                                 </span>
-                                <button className="skin-type-clear-btn" onClick={handleClearSkinType}>
+                                <button className="skin-type-clear-btn" onClick={() => setSkinTypeActive(false)}>
                                     Show all products
                                 </button>
                             </>
                         ) : (
                             <>
-                                <span className="skin-type-banner-text">
-                                    Showing all products
-                                </span>
-                                <button className="skin-type-clear-btn" onClick={handleRestoreSkinType}>
+                                <span className="skin-type-banner-text">Showing all products</span>
+                                <button className="skin-type-clear-btn" onClick={() => setSkinTypeActive(true)}>
                                     Filter for {skinTypeLabels[skinType]}
                                 </button>
                             </>

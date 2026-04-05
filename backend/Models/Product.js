@@ -8,7 +8,8 @@ const productSchema = new mongoose.Schema({
     description: String,
     skinTypes: [String],
     imageUrl: String,
-    stock: { type: Number, default: 100 }
+    stock: { type: Number, default: 100 },
+    averageRating: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('Product', productSchema);

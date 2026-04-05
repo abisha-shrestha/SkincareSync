@@ -1,5 +1,16 @@
 const Review = require('../Models/Review');
 const Order = require('../Models/Order');
+const Product = require('../Models/Product');
+
+
+const recalculateRating = async (productId) => {
+    const reviews = await Review.find({ productId });
+    const avg = reviews.length
+        ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1))
+        : 0;
+    await Product.findByIdAndUpdate(productId, { averageRating: avg });
+    return avg;
+};
 
 const getReviews = async (req, res) => {
     try {
@@ -19,7 +30,6 @@ const addReview = async (req, res) => {
         const { productId } = req.params;
         const { userEmail, userName, rating, comment } = req.body;
 
-        // Check if user has bought this product
         const hasBought = await Order.findOne({
             userEmail,
             'items.productId': productId,
@@ -30,6 +40,10 @@ const addReview = async (req, res) => {
         }
 
         const review = await Review.create({ productId, userEmail, userName, rating, comment });
+
+        // Recalculate after adding
+        await recalculateRating(productId);
+
         res.status(201).json({ success: true, review });
     } catch (err) {
         if (err.code === 11000) {
@@ -43,12 +57,17 @@ const updateReview = async (req, res) => {
     try {
         const { productId } = req.params;
         const { userEmail, rating, comment } = req.body;
+
         const review = await Review.findOneAndUpdate(
             { productId, userEmail },
             { rating, comment },
             { new: true }
         );
         if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+
+        // Recalculate after editing
+        await recalculateRating(productId);
+
         res.json({ success: true, review });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
@@ -59,7 +78,12 @@ const deleteReview = async (req, res) => {
     try {
         const { productId } = req.params;
         const { userEmail } = req.body;
+
         await Review.findOneAndDelete({ productId, userEmail });
+
+        // Recalculate after deleting
+        await recalculateRating(productId);
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
