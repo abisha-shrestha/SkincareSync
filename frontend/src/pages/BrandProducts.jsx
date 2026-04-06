@@ -17,7 +17,7 @@ export default function BrandProducts() {
             .then(data => {
                 const all = data.products || [];
                 const filtered = all.filter(
-                    p => p.brand?.toLowerCase() === decodedBrand.toLowerCase()
+                    p => p.brand?.trim().toLowerCase() === decodedBrand.trim().toLowerCase()
                 );
                 setProducts(filtered);
             })
@@ -72,7 +72,7 @@ export default function BrandProducts() {
                             {products.map(product => (
                                 <div
                                     key={product._id}
-                                    onClick={() => navigate(`/products/${product._id}`)}
+                                    onClick={() => navigate(`/product/${product._id}`)}
                                     style={{
                                         background: "var(--bg-card)",
                                         borderRadius: "14px",

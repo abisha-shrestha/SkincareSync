@@ -275,7 +275,7 @@ export default function ProductDetail() {
                         <div className="product-header">
                             <p className="product-category">{product.category}</p>
                             {product.brand && (
-                                <p className="product-brand-link" onClick={() => navigate(`/brand/${encodeURIComponent(product.brand)}`)}>
+                                <p className="product-brand-link" onClick={() => navigate(`/brand/${encodeURIComponent(product.brand.trim())}`)}>
                                     {product.brand}
                                 </p>
                             )}

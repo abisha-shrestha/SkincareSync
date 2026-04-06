@@ -64,7 +64,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
     }, []);
 
     const allBrands = useMemo(() => {
-        return [...new Set(allProducts.map(p => p.brand).filter(Boolean))].sort();
+        return [...new Set(allProducts.map(p => p.brand?.trim()).filter(Boolean))].sort();
     }, [allProducts]);
 
     const activeFilterCount = [
@@ -104,7 +104,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         }
 
         if (activeBrand !== "All") {
-            result = result.filter(p => p.brand === activeBrand);
+            result = result.filter(p => p.brand?.trim() === activeBrand);
         }
 
         result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
