@@ -7,8 +7,8 @@ import "../components/ProductGrid/ProductGrid.css";
 
 const BANNERS = [
     { emoji: "🚚", text: "Free delivery on orders above", highlight: "Rs. 3,000" },
-    { emoji: "✨", text: "New arrivals added every week —", highlight: "Shop fresh picks" },
-    { emoji: "🌿", text: "Clean ingredients, real results —", highlight: "Honest skincare only" },
+    { emoji: "✨", text: "New arrivals added every week -", highlight: "Shop fresh picks" },
+    { emoji: "🌿", text: "Clean ingredients, real results -", highlight: "Honest skincare only" },
     { emoji: "💌", text: "Take the quiz and find your", highlight: "perfect routine" },
 ];
 
@@ -18,6 +18,8 @@ export default function Products() {
     const [skinTypeActive, setSkinTypeActive] = useState(false);
     const [bannerIndex, setBannerIndex] = useState(0);
     const userEmail = localStorage.getItem('email');
+    const [scrollReady, setScrollReady] = useState(false);
+    
 
     // Rotate banners every 4 seconds
     useEffect(() => {
@@ -25,6 +27,20 @@ export default function Products() {
             setBannerIndex(i => (i + 1) % BANNERS.length);
         }, 4000);
         return () => clearInterval(interval);
+    }, []);
+
+
+    useEffect(() => {
+        const savedScroll = sessionStorage.getItem('productsScrollY');
+        if (savedScroll) {
+            setTimeout(() => {
+                window.scrollTo({ top: parseInt(savedScroll), behavior: 'instant' });
+                sessionStorage.removeItem('productsScrollY');
+                setScrollReady(true); 
+            }, 150);
+        } else {
+            setScrollReady(true); 
+        }
     }, []);
 
     useEffect(() => {
@@ -70,7 +86,7 @@ export default function Products() {
                 </span>
             </div>
 
-            <section className="products-page">
+            <section className="products-page" style={{ opacity: scrollReady ? 1 : 0, transition: 'opacity 0.15s ease' }}>
                 <div className="products-header">
                     <p className="label">Our Collection</p>
                     <h1>Your Skin, Your Essentials</h1>

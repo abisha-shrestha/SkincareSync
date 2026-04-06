@@ -369,7 +369,10 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                             <div
                                 key={product._id}
                                 className="product-card"
-                                onClick={() => navigate(`/products/${product._id}`)}
+                                onClick={() => {
+                                    sessionStorage.setItem('productsScrollY', window.scrollY);
+                                    navigate(`/product/${product._id}`);
+                                }}
                                 style={{ cursor: 'pointer' }}
                             >
                                 <div className="product-image">
