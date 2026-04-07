@@ -11,7 +11,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const [showConfirm, setShowConfirm] = useState(false);
 
     // Forgot password state
-    const [forgotMode, setForgotMode] = useState(false); // step: 'email' | 'otp' | 'reset'
+    const [forgotMode, setForgotMode] = useState(false); 
     const [forgotStep, setForgotStep] = useState('email');
     const [forgotEmail, setForgotEmail] = useState('');
     const [otp, setOtp] = useState('');
@@ -325,17 +325,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                     </div>
 
                     <div className="auth-field">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <label>Password</label>
-                            {isLogin && (
-                                <span
-                                    className="auth-forgot"
-                                    onClick={() => { setForgotMode(true); setForgotEmail(formData.email); }}
-                                >
-                                    Forgot password?
-                                </span>
-                            )}
-                        </div>
+                        <label>Password</label>
                         <div className="input-wrapper">
                             <input
                                 type={showPassword ? "text" : "password"}
@@ -357,6 +347,16 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                                     <div style={{ width: strength.width, background: strength.color }} />
                                 </div>
                                 <span style={{ color: strength.color }}>{strength.label}</span>
+                            </div>
+                        )}
+                        {isLogin && (
+                            <div style={{ marginTop: '8px', textAlign: 'right' }}>
+                                <span
+                                    className="auth-forgot"
+                                    onClick={() => { setForgotMode(true); setForgotEmail(formData.email); }}
+                                >
+                                    Forgot password?
+                                </span>
                             </div>
                         )}
                     </div>

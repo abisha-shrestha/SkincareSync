@@ -144,3 +144,10 @@ section { margin-bottom: 80px; }
     background-color: var(--bg-subtle);
     color: var(--text-primary);
 }
+
+
+
+
+.auth-page {
+    margin-bottom: 0;
+}
