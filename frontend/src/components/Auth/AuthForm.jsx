@@ -9,6 +9,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     // Forgot password state
     const [forgotMode, setForgotMode] = useState(false); 
@@ -241,12 +242,18 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                             <div className="auth-form">
                                 <div className="auth-field">
                                     <label>New Password</label>
-                                    <input
-                                        type="password"
-                                        placeholder="At least 4 characters"
-                                        value={newPassword}
-                                        onChange={e => setNewPassword(e.target.value)}
-                                    />
+                                    <div className="input-wrapper">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            placeholder="At least 4 characters"
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            autoComplete="off"
+                                        />
+                                        <button type="button" className="eye-btn" onClick={() => setShowNewPassword(v => !v)} tabIndex={-1}>
+                                            {showNewPassword ? <FiEyeOff /> : <FiEye />}
+                                        </button>
+                                    </div>
                                 </div>
                                 <button className="auth-submit-btn" onClick={handleResetPassword} disabled={loading}>
                                     {loading ? <span className="auth-spinner" /> : 'Reset Password'}
@@ -333,7 +340,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                                 placeholder={isLogin ? "Enter your password" : "Create a password"}
                                 value={formData.password}
                                 onChange={handleChange}
-                                autoComplete="new-password"
+                                autoComplete="off"
                                 className={errors.password ? "input-error" : ""}
                             />
                             <button type="button" className="eye-btn" onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
@@ -371,7 +378,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                                     placeholder="Confirm your password"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    autoComplete="new-password"
+                                    autoComplete="off"
                                     className={errors.confirmPassword ? "input-error" : formData.confirmPassword && formData.password === formData.confirmPassword ? "input-success" : ""}
                                 />
                                 <button type="button" className="eye-btn" onClick={() => setShowConfirm(v => !v)} tabIndex={-1}>

@@ -1,3 +1,35 @@
+.profile-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile-input-wrapper input {
+    width: 100%;
+    padding-right: 44px;
+}
+
+.profile-eye-btn {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.profile-eye-btn:hover { color: var(--text-primary); }
+
+/* Kill browser native eye icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+}
+
 .profile-page {
     padding: 100px 4rem 60px;
     background: var(--bg-secondary);

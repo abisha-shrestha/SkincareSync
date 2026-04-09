@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 import "./Profile.css";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useTheme } from "../ThemeContext";
 
 export default function Profile() {
@@ -31,6 +32,10 @@ export default function Profile() {
     const [deletePassword, setDeletePassword] = useState("");
     const [deleteError, setDeleteError] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showDeletePassword, setShowDeletePassword] = useState(false);
 
     // Diary state
     const [diaryEntries, setDiaryEntries] = useState([]);
@@ -704,26 +709,55 @@ export default function Profile() {
                                     <h2>Settings</h2>
                                     <div className="settings-block">
                                         <h3>Change password</h3>
-                                        <div className="profile-form">
+                                        <div className="form-group">
+                                            <label>Current Password</label>
+                                            <div className="profile-input-wrapper">
+                                                <input
+                                                    type={showCurrentPassword ? "text" : "password"}
+                                                    value={passwordForm.currentPassword}
+                                                    onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                                                    placeholder="Enter current password"
+                                                    autoComplete="off"
+                                                />
+                                                <button type="button" className="profile-eye-btn" onClick={() => setShowCurrentPassword(v => !v)} tabIndex={-1}>
+                                                    {showCurrentPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                                </button>
+                                            </div>
+                                            {passwordErrors.currentPassword && <p className="field-error">{passwordErrors.currentPassword}</p>}
+                                        </div>
+                                        <div className="form-row">
                                             <div className="form-group">
-                                                <label>Current Password</label>
-                                                <input type="password" value={passwordForm.currentPassword} onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Enter current password" />
-                                                {passwordErrors.currentPassword && <p className="field-error">{passwordErrors.currentPassword}</p>}
-                                            </div>
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>New Password</label>
-                                                    <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} placeholder="Enter new password" />
-                                                    {passwordErrors.newPassword && <p className="field-error">{passwordErrors.newPassword}</p>}
+                                                <label>New Password</label>
+                                                <div className="profile-input-wrapper">
+                                                    <input
+                                                        type={showNewPassword ? "text" : "password"}
+                                                        value={passwordForm.newPassword}
+                                                        onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                                        placeholder="Enter new password"
+                                                        autoComplete="off"
+                                                    />
+                                                    <button type="button" className="profile-eye-btn" onClick={() => setShowNewPassword(v => !v)} tabIndex={-1}>
+                                                        {showNewPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                                    </button>
                                                 </div>
-                                                <div className="form-group">
-                                                    <label>Confirm New Password</label>
-                                                    <input type="password" value={passwordForm.confirmPassword} onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} placeholder="Confirm new password" />
-                                                    {passwordErrors.confirmPassword && <p className="field-error">{passwordErrors.confirmPassword}</p>}
-                                                </div>
+                                                {passwordErrors.newPassword && <p className="field-error">{passwordErrors.newPassword}</p>}
                                             </div>
-                                            {passwordErrors.general && <p className="field-error">{passwordErrors.general}</p>}
-                                            <button className="btn-profile-save" onClick={handleChangePassword}>Update password</button>
+                                            <div className="form-group">
+                                                <label>Confirm New Password</label>
+                                                <div className="profile-input-wrapper">
+                                                    <input
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        value={passwordForm.confirmPassword}
+                                                        onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                                        placeholder="Confirm new password"
+                                                        autoComplete="off"
+                                                    />
+                                                    <button type="button" className="profile-eye-btn" onClick={() => setShowConfirmPassword(v => !v)} tabIndex={-1}>
+                                                        {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                                    </button>
+                                                </div>
+                                                {passwordErrors.confirmPassword && <p className="field-error">{passwordErrors.confirmPassword}</p>}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="settings-block danger-block">
@@ -732,16 +766,21 @@ export default function Profile() {
                                         {!showDeleteConfirm ? (
                                             <button className="btn-danger" onClick={() => setShowDeleteConfirm(true)}>Delete my account</button>
                                         ) : (
-                                            <div className="profile-form">
-                                                <div className="form-group">
-                                                    <label>Enter your password to confirm</label>
-                                                    <input type="password" value={deletePassword} onChange={e => setDeletePassword(e.target.value)} placeholder="Your password" />
-                                                    {deleteError && <p className="field-error">{deleteError}</p>}
+                                            <div className="form-group">
+                                                <label>Enter your password to confirm</label>
+                                                <div className="profile-input-wrapper">
+                                                    <input
+                                                        type={showDeletePassword ? "text" : "password"}
+                                                        value={deletePassword}
+                                                        onChange={e => setDeletePassword(e.target.value)}
+                                                        placeholder="Your password"
+                                                        autoComplete="off"
+                                                    />
+                                                    <button type="button" className="profile-eye-btn" onClick={() => setShowDeletePassword(v => !v)} tabIndex={-1}>
+                                                        {showDeletePassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                                    </button>
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '10px' }}>
-                                                    <button className="btn-danger" onClick={handleDeleteAccount}>Confirm deletion</button>
-                                                    <button className="btn-profile-cancel" onClick={() => { setShowDeleteConfirm(false); setDeleteError(""); setDeletePassword(""); }}>Cancel</button>
-                                                </div>
+                                                {deleteError && <p className="field-error">{deleteError}</p>}
                                             </div>
                                         )}
                                         <h3>Appearance</h3>
