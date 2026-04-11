@@ -36,6 +36,8 @@ export default function Profile() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showDeletePassword, setShowDeletePassword] = useState(false);
+    const [logoutModal, setLogoutModal] = useState(false);
+    const [deleteModal, setDeleteModal] = useState(false);
 
     // Diary state
     const [diaryEntries, setDiaryEntries] = useState([]);
@@ -301,7 +303,8 @@ export default function Profile() {
         toast.success('Entry deleted');
     };
 
-    const logout = () => { localStorage.clear(); navigate("/auth"); };
+    const logout = () => setLogoutModal(true);
+    const confirmLogout = () => { localStorage.clear(); navigate("/auth"); };
 
     const statusColor = (status) => {
         const colors = { Pending: '#f0a500', Processing: '#3b82f6', Shipped: '#8b5cf6', Delivered: '#22c55e', Cancelled: '#ef4444' };
@@ -764,23 +767,39 @@ export default function Profile() {
                                         <h3>Delete account</h3>
                                         <p className="danger-text">Your account will be scheduled for permanent deletion after 30 days. This action cannot be undone.</p>
                                         {!showDeleteConfirm ? (
-                                            <button className="btn-danger" onClick={() => setShowDeleteConfirm(true)}>Delete my account</button>
+                                            <button className="btn-danger" onClick={() => setShowDeleteConfirm(true)}>
+                                                Delete my account
+                                            </button>
                                         ) : (
-                                            <div className="form-group">
-                                                <label>Enter your password to confirm</label>
-                                                <div className="profile-input-wrapper">
-                                                    <input
-                                                        type={showDeletePassword ? "text" : "password"}
-                                                        value={deletePassword}
-                                                        onChange={e => setDeletePassword(e.target.value)}
-                                                        placeholder="Your password"
-                                                        autoComplete="off"
-                                                    />
-                                                    <button type="button" className="profile-eye-btn" onClick={() => setShowDeletePassword(v => !v)} tabIndex={-1}>
-                                                        {showDeletePassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                            <div className="profile-form">
+                                                <div className="form-group">
+                                                    <label>Enter your password to confirm</label>
+                                                    <div className="profile-input-wrapper">
+                                                        <input
+                                                            type={showDeletePassword ? "text" : "password"}
+                                                            value={deletePassword}
+                                                            onChange={e => setDeletePassword(e.target.value)}
+                                                            placeholder="Your password"
+                                                            autoComplete="off"
+                                                        />
+                                                        <button type="button" className="profile-eye-btn" onClick={() => setShowDeletePassword(v => !v)} tabIndex={-1}>
+                                                            {showDeletePassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                                        </button>
+                                                    </div>
+                                                    {deleteError && <p className="field-error">{deleteError}</p>}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <button className="btn-danger" onClick={() => setDeleteModal(true)}>
+                                                        Confirm deletion
+                                                    </button>
+                                                    <button className="btn-profile-cancel" onClick={() => {
+                                                        setShowDeleteConfirm(false);
+                                                        setDeleteError("");
+                                                        setDeletePassword("");
+                                                    }}>
+                                                        Cancel
                                                     </button>
                                                 </div>
-                                                {deleteError && <p className="field-error">{deleteError}</p>}
                                             </div>
                                         )}
                                         <h3>Appearance</h3>
@@ -800,6 +819,49 @@ export default function Profile() {
                     </div>
                 </div>
             </section>
+            {/* LOGOUT MODAL */}
+            {logoutModal && (
+                <div className="confirm-modal-overlay" onClick={() => setLogoutModal(false)}>
+                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                        <p className="confirm-modal-title">Are you sure you want to log out?</p>
+                        <p className="confirm-modal-desc">You will need to sign in again to access your account.</p>
+                        <div className="confirm-modal-actions">
+                            <button className="confirm-modal-cancel" onClick={() => setLogoutModal(false)}>
+                                Cancel
+                            </button>
+                            <button className="confirm-modal-confirm neutral" onClick={confirmLogout}>
+                                Log out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* DELETE MODAL */}
+            {deleteModal && (
+                <div className="confirm-modal-overlay" onClick={() => setDeleteModal(false)}>
+                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                        <p className="confirm-modal-title">Delete account?</p>
+                        <p className="confirm-modal-desc">
+                            Are you sure you want to <strong>delete your account?</strong> This action cannot be undone. Your account will be permanently removed after 30 days.
+                        </p>
+                        <div className="confirm-modal-actions">
+                            <button className="confirm-modal-cancel" onClick={() => setDeleteModal(false)}>
+                                Cancel
+                            </button>
+                            <button
+                                className="confirm-modal-confirm"
+                                onClick={() => {
+                                    setDeleteModal(false);
+                                    handleDeleteAccount();
+                                }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <Footer />
         </>
     );

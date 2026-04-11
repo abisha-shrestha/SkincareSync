@@ -580,3 +580,100 @@ input[type="password"]::-ms-clear {
     font-weight: 500;
     margin-left: auto;
 }
+
+
+
+
+/* CONFIRMATION MODAL */
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.confirm-modal {
+    background: var(--bg-card);
+    border-radius: 18px;
+    padding: 32px 36px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-xl);
+    animation: modalRise 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalRise {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.confirm-modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.confirm-modal-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.confirm-modal-desc strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.confirm-modal-cancel {
+    padding: 10px 22px;
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.confirm-modal-cancel:hover {
+    background: var(--bg-card);
+    border-color: var(--border);
+}
+
+.confirm-modal-confirm {
+    padding: 10px 22px;
+    background: #e63946;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.confirm-modal-confirm:hover { opacity: 0.88; }
+
+.confirm-modal-confirm.neutral {
+    background: var(--accent);
+}
