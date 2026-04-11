@@ -271,6 +271,31 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     white-space: nowrap;
 }
 
+
+
+
+.restore-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.restore-actions .auth-submit-btn {
+    flex: 1;
+}
+
+.restore-cancel {
+    background: var(--bg-subtle, #f5f0eb) !important;
+    color: var(--text-secondary, #6b5d52) !important;
+    border: 1.5px solid var(--border, #e6e0d9) !important;
+}
+
+.restore-cancel:hover {
+    opacity: 0.85;
+}
+
+
+
 /* responsive */
 @media (max-width: 520px) {
     .auth-container {

@@ -10,6 +10,9 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+    const [restoreEmail, setRestoreEmail] = useState('');
+    const [restorePassword, setRestorePassword] = useState('');
 
     // Forgot password state
     const [forgotMode, setForgotMode] = useState(false); 
@@ -68,7 +71,17 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                 body: JSON.stringify(body)
             });
             const result = await response.json();
-            if (!response.ok) { setServerError(result.message || "Something went wrong."); return; }
+            if (result.isDeleted) {
+                setRestoreEmail(formData.email);
+                setRestorePassword(formData.password);
+                setShowRestorePrompt(true);
+                setLoading(false);
+                return;
+            }
+            if (!response.ok) {
+                setServerError(result.message || "Something went wrong.");
+                return;
+            }
             if (isLogin) {
                 localStorage.setItem("token", result.jwtToken);
                 localStorage.setItem("name", result.name);
@@ -94,6 +107,34 @@ export default function AuthForm({ isLogin, toggleAuth }) {
             setLoading(false);
         }
     };
+
+
+    const handleRestore = async () => {
+    setLoading(true);
+    try {
+        const res = await fetch('http://localhost:3000/auth/restore-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: restoreEmail, password: restorePassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem("token", data.jwtToken);
+            localStorage.setItem("name", data.name);
+            localStorage.setItem("email", data.email);
+            localStorage.setItem("role", data.role);
+            window.location.href = data.role === 'admin' ? '/admin' : '/';
+        } else {
+            setServerError(data.message);
+            setShowRestorePrompt(false);
+        }
+    } catch {
+        setServerError("Something went wrong.");
+        setShowRestorePrompt(false);
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handleSendOtp = async () => {
         setForgotError('');
@@ -274,6 +315,37 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                             Back to sign in
                         </span>
                     </p>
+                </div>
+            </section>
+        );
+    }
+
+
+    if (showRestorePrompt) {
+        return (
+            <section className="auth-page">
+                <div className="auth-container">
+                    <div className="auth-brand">SkincareSync</div>
+                    <h1 className="auth-heading">Account scheduled for deletion</h1>
+                    <p className="auth-subtext">
+                        This account is scheduled for deletion. Would you like to restore it and log in?
+                    </p>
+                    <div className="restore-actions">
+                        <button
+                            className="auth-submit-btn restore-cancel"
+                            onClick={() => setShowRestorePrompt(false)}
+                            disabled={loading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className="auth-submit-btn"
+                            onClick={handleRestore}
+                            disabled={loading}
+                        >
+                            {loading ? <span className="auth-spinner" /> : 'Restore & Log in'}
+                        </button>
+                    </div>
                 </div>
             </section>
         );

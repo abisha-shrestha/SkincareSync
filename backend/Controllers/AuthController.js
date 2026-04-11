@@ -27,14 +27,17 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(403).json({ message: "Auth failed, email doesn't exist", success: false });
         }
-        // Block soft-deleted accounts
-        if (user.isDeleted) {
-            return res.status(403).json({ message: "This account has been deleted", success: false });
-        }
+
         const isPassEqual = await bcrypt.compare(password, user.password);
         if (!isPassEqual) {
             return res.status(403).json({ message: "Auth failed, email doesn't exist", success: false });
         }
+
+        // Soft-deleted - return special flag instead of blocking
+        if (user.isDeleted) {
+            return res.status(200).json({ success: false, isDeleted: true, message: "Account is scheduled for deletion" });
+        }
+
         const jwtToken = jwt.sign(
             { email: user.email, _id: user._id, role: user.role },
             process.env.JWT_SECRET,
@@ -120,6 +123,36 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { signup, login, sendOtp, verifyOtp, resetPassword };
+const restoreAccount = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await UserModel.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-// module.exports = { signup, login };
+        const isPassEqual = await bcrypt.compare(password, user.password);
+        if (!isPassEqual) return res.status(403).json({ success: false, message: "Incorrect password" });
+
+        user.isDeleted = false;
+        user.deletedAt = null;
+        await user.save();
+
+        const jwtToken = jwt.sign(
+            { email: user.email, _id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            success: true,
+            message: "Account restored",
+            jwtToken,
+            email: user.email,
+            name: user.name,
+            role: user.role
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Something went wrong" });
+    }
+};
+
+module.exports = { signup, login, sendOtp, verifyOtp, resetPassword, restoreAccount };
