@@ -27,6 +27,7 @@ export default function Checkout() {
             setLoading(false);
         } else {
             const selectedItems = location.state?.selectedItems;
+
             if (selectedItems && selectedItems.length > 0) {
                 setCartItems(selectedItems);
                 setLoading(false);
@@ -50,6 +51,7 @@ export default function Checkout() {
             .then(data => {
                 const addresses = data.addresses || [];
                 setSavedAddresses(addresses);
+
                 const defaultAddr = addresses.find(a => a.isDefault);
                 if (defaultAddr) {
                     setForm({
@@ -61,81 +63,106 @@ export default function Checkout() {
                 }
             })
             .catch(err => console.error(err));
-    }, []); 
+    }, []);
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = cartItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+    );
 
     const validate = () => {
         const newErrors = {};
+
         if (!form.fullName.trim()) newErrors.fullName = "Full name is required";
-        else if (form.fullName.trim().length < 3) newErrors.fullName = "Full name must be at least 3 characters";
+        else if (form.fullName.trim().length < 3)
+            newErrors.fullName = "Full name must be at least 3 characters";
+
         if (!form.phone.trim()) newErrors.phone = "Phone number is required";
-        else if (!/^(97|98)\d{8}$/.test(form.phone.trim())) newErrors.phone = "Phone must start with 97 or 98 and be exactly 10 digits";
-        if (!form.address.trim()) newErrors.address = "Delivery address is required";
-        else if (form.address.trim().length < 5) newErrors.address = "Address must be at least 5 characters";
+        else if (!/^(97|98)\d{8}$/.test(form.phone.trim()))
+            newErrors.phone = "Phone must be 10 digits starting with 97 or 98";
+
+        if (!form.address.trim()) newErrors.address = "Address is required";
+        else if (form.address.trim().length < 5)
+            newErrors.address = "Address must be at least 5 characters";
+
         if (!form.city.trim()) newErrors.city = "City is required";
-        else if (form.city.trim().length < 2) newErrors.city = "City must be at least 2 characters";
+        else if (form.city.trim().length < 2)
+            newErrors.city = "City must be at least 2 characters";
+
         return newErrors;
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
         if (name === "phone") {
             const digits = value.replace(/\D/g, "").slice(0, 10);
             setForm(prev => ({ ...prev, phone: digits }));
         } else {
             setForm(prev => ({ ...prev, [name]: value }));
         }
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: "" }));
+        }
     };
 
     const handleSelectAddress = (addr) => {
-        setForm({ fullName: addr.fullName, phone: addr.phone, address: addr.address, city: addr.city });
+        setForm({
+            fullName: addr.fullName,
+            phone: addr.phone,
+            address: addr.address,
+            city: addr.city
+        });
         setErrors({});
     };
 
     const handlePlaceOrder = async () => {
         const validationErrors = validate();
+
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
-            toast.error("Please fix the errors before placing your order");
+            toast.error("Please fix form errors");
             return;
         }
+
         try {
             setPlacing(true);
+
             const itemsPayload = cartItems.map(item => ({
-                productId: item.productId._id || item.productId,
+                productId: item.productId?._id || item.productId,
                 name: item.productId?.name || item.name,
                 price: item.price,
                 quantity: item.quantity,
-                imageUrl: item.productId?.imageUrl || item.imageUrl || ''
+                imageUrl: item.productId?.imageUrl || item.imageUrl || ""
             }));
+
             const res = await fetch("http://localhost:3000/api/orders", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userEmail, deliveryAddress: form, items: itemsPayload, isBuyNow })
+                body: JSON.stringify({
+                    userEmail,
+                    deliveryAddress: form,
+                    items: itemsPayload,
+                    isBuyNow
+                })
             });
+
             const data = await res.json();
+
             if (data.success) {
                 if (isBuyNow) sessionStorage.removeItem("buyNowItem");
+
                 navigate("/order-success", {
                     state: {
-                        orderedItems: cartItems.map(item => ({
-                            productId: String(item.productId?._id || item.productId),
-                            name: item.productId?.name || item.name,
-                            imageUrl: item.productId?.imageUrl || item.imageUrl || null,
-                            price: item.price,
-                            quantity: item.quantity,
-                            category: item.productId?.category || item.category || null,
-                            brand: item.productId?.brand || item.brand || null,
-                        }))
+                        orderedItems: cartItems
                     }
                 });
             } else {
-                toast.error("Order failed: " + data.message);
+                toast.error(data.message || "Order failed");
             }
         } catch (err) {
-            toast.error("Something went wrong. Please try again.");
+            toast.error("Something went wrong");
         } finally {
             setPlacing(false);
         }
@@ -145,7 +172,7 @@ export default function Checkout() {
         return (
             <>
                 <Navbar />
-                <div style={{ padding: "140px 6rem", textAlign: "center", minHeight: "80vh", background: "var(--bg-secondary)" }}>
+                <div style={{ padding: "140px 6rem", textAlign: "center" }}>
                     <h2>Loading...</h2>
                 </div>
                 <Footer />
@@ -153,33 +180,51 @@ export default function Checkout() {
         );
     }
 
+    // UI Shipping, for display puropse only
+    const getShippingCost = () => {
+        if (total > 4500) return 0;
+        const city = form.city.trim().toLowerCase();
+        if (city === "pokhara") return 150;
+        return 220;
+    };
+
+    const shipping = getShippingCost();
+    const grandTotal = total + shipping;
+
     return (
         <>
             <Navbar />
+
             <section className="checkout-page">
                 <div className="checkout-wrapper">
+
                     <h1 className="checkout-title">
                         {isBuyNow ? "Quick Checkout" : "Checkout"}
                     </h1>
+
                     <div className="checkout-container">
+
+                        {/* LEFT */}
                         <div className="checkout-left">
 
                             {savedAddresses.length > 0 && (
                                 <div className="checkout-section">
-                                    <h2>Saved addresses</h2>
+                                    <h2>Saved Addresses</h2>
                                     <div className="saved-address-list">
                                         {savedAddresses.map(addr => (
                                             <div
                                                 key={addr._id}
-                                                className={`saved-address-item ${form.address === addr.address && form.phone === addr.phone ? "selected" : ""}`}
+                                                className={`saved-address-item ${form.address === addr.address ? "selected" : ""}`}
                                                 onClick={() => handleSelectAddress(addr)}
                                             >
                                                 <div className="saved-address-label">
                                                     {addr.label}
-                                                    {addr.isDefault && <span className="address-default-badge">Default</span>}
+                                                    {addr.isDefault && (
+                                                        <span className="address-default-badge">Default</span>
+                                                    )}
                                                 </div>
-                                                <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "2px 0" }}>{addr.fullName}</p>
-                                                <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>{addr.address}, {addr.city}</p>
+                                                <p>{addr.fullName}</p>
+                                                <p>{addr.address}, {addr.city}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -187,72 +232,103 @@ export default function Checkout() {
                             )}
 
                             <div className="checkout-section">
-                                <h2>Delivery details</h2>
+                                <h2>Delivery Details</h2>
+
                                 <div className="checkout-form">
+
                                     <div className="checkout-field">
-                                        <label>Full Name <span className="checkout-required">*</span></label>
-                                        <input type="text" name="fullName" value={form.fullName} onChange={handleChange} placeholder="Enter your full name" className={errors.fullName ? "input-error" : ""} />
+                                        <label>Full Name *</label>
+                                        <input name="fullName" value={form.fullName} onChange={handleChange} />
                                         {errors.fullName && <p className="checkout-error">{errors.fullName}</p>}
                                     </div>
+
                                     <div className="checkout-field">
-                                        <label>Phone Number <span className="checkout-required">*</span></label>
-                                        <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="98XXXXXXXX" maxLength={10} className={errors.phone ? "input-error" : ""} />
+                                        <label>Phone *</label>
+                                        <input name="phone" value={form.phone} onChange={handleChange} />
                                         {errors.phone && <p className="checkout-error">{errors.phone}</p>}
                                     </div>
+
                                     <div className="checkout-field">
-                                        <label>Delivery Address <span className="checkout-required">*</span></label>
-                                        <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="Street address, tole" className={errors.address ? "input-error" : ""} />
+                                        <label>Address *</label>
+                                        <input name="address" value={form.address} onChange={handleChange} />
                                         {errors.address && <p className="checkout-error">{errors.address}</p>}
                                     </div>
+
                                     <div className="checkout-field">
-                                        <label>City <span className="checkout-required">*</span></label>
-                                        <input type="text" name="city" value={form.city} onChange={handleChange} placeholder="Pokhara" className={errors.city ? "input-error" : ""} />
+                                        <label>City *</label>
+                                        <input name="city" value={form.city} onChange={handleChange} />
                                         {errors.city && <p className="checkout-error">{errors.city}</p>}
                                     </div>
+
                                 </div>
                             </div>
 
                             <div className="checkout-section">
-                                <h2>Payment method</h2>
+                                <h2>Payment</h2>
                                 <div className="payment-option selected">
-                                    <span className="payment-dot" />
                                     Cash on Delivery
                                 </div>
                             </div>
+
                         </div>
 
+                        {/* RIGHT */}
                         <div className="checkout-right">
+
                             <div className="checkout-summary">
-                                <h2>Order summary</h2>
+
+                                <h2>Order Summary</h2>
+
                                 <div className="checkout-items">
                                     {cartItems.map((item, idx) => (
-                                        <div key={item.productId?._id || item.productId || idx} className="checkout-item">
+                                        <div key={idx} className="checkout-item">
                                             <div className="checkout-item-image">
-                                                {item.productId?.imageUrl && (
-                                                    <img src={item.productId.imageUrl} alt={item.productId.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }} />
-                                                )}
+                                                <img src={item.productId?.imageUrl || item.imageUrl} />
                                             </div>
-                                            <div className="checkout-item-info">
-                                                <p className="checkout-item-name">{item.productId?.name || item.name}</p>
-                                                <p className="checkout-item-qty">Qty: {item.quantity}</p>
+                                            <div>
+                                                <p>{item.productId?.name || item.name}</p>
+                                                <p>Qty: {item.quantity}</p>
                                             </div>
-                                            <p className="checkout-item-price">Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                                            <p>Rs. {(item.price * item.quantity).toLocaleString()}</p>
                                         </div>
                                     ))}
                                 </div>
+
                                 <div className="checkout-totals">
-                                    <div className="summary-row"><span>Subtotal</span><span>Rs. {total.toLocaleString()}</span></div>
-                                    <div className="summary-row"><span>Shipping</span><span>Free</span></div>
-                                    <div className="summary-total"><span>Total</span><span>Rs. {total.toLocaleString()}</span></div>
+
+                                    <div className="summary-row">
+                                        <span>Subtotal</span>
+                                        <span>Rs. {total.toLocaleString()}</span>
+                                    </div>
+
+                                    <div className="summary-row">
+                                        <span>Shipping</span>
+                                        <span>{shipping === 0 ? "Free" : `Rs. ${shipping}`}</span>
+                                    </div>
+
+                                    <div className="summary-total">
+                                        <span>Total</span>
+                                        <span>Rs. {grandTotal.toLocaleString()}</span>
+                                    </div>
+
                                 </div>
-                                <button className="btn btn-cta full-width" onClick={handlePlaceOrder} disabled={placing} style={{ marginTop: "16px" }}>
-                                    {placing ? "Placing Order..." : "Place Order →"}
+
+                                <button
+                                    onClick={handlePlaceOrder}
+                                    disabled={placing}
+                                    className="btn btn-cta full-width"
+                                >
+                                    {placing ? "Placing..." : "Place Order"}
                                 </button>
+
                             </div>
+
                         </div>
+
                     </div>
                 </div>
             </section>
+
             <Footer />
         </>
     );
