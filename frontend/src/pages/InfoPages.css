@@ -10,7 +10,7 @@
 
 .info-lead {
     margin: 16px 0 48px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: 17px;
     line-height: 1.7;
 }
@@ -22,6 +22,7 @@
 .info-container h1 {
     margin-top: 10px;
     font-family: Georgia, serif;
+    color: var(--text-primary);
 }
 
 .info-container h2 {
@@ -37,6 +38,7 @@
     margin-bottom: 10px;
 }
 
+/* CONTACT GRID */
 .contact-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -46,6 +48,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(107, 93, 82, 0.08);
 }
 
 .contact-grid h2 {
@@ -63,6 +66,7 @@
     font-weight: 500;
 }
 
+/* FORM */
 .contact-form {
     display: flex;
     flex-direction: column;
@@ -75,7 +79,7 @@
     padding: 14px 16px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: var(--bg-card);
+    background: var(--bg-subtle);
     color: var(--text-primary);
     font-size: 15px;
     font-family: inherit;
@@ -87,8 +91,9 @@
 .contact-form input:focus,
 .contact-form textarea:focus {
     border-color: var(--accent-dark);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(107, 93, 82, 0.12);
 }
-
 
 .contact-form-section h2 {
     margin-bottom: 24px;
@@ -106,10 +111,10 @@
 .contact-form textarea {
     width: 100%;
     padding: 13px 16px;
-    border: 1.5px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: 12px;
     font-size: 14px;
-    background: var(--input-bg);
+    background: var(--bg-subtle);
     color: var(--text-primary);
     font-family: inherit;
     transition: all 0.2s;
@@ -122,13 +127,13 @@
     outline: none;
     border-color: var(--accent-dark);
     background: var(--bg-card);
-    box-shadow: 0 0 0 3px rgba(107, 93, 82, 0.1);
+    box-shadow: 0 0 0 3px rgba(107, 93, 82, 0.12);
 }
 
 .contact-form input.input-error,
 .contact-form textarea.input-error {
     border-color: #e63946;
-    background: rgba(230, 57, 70, 0.04);
+    background: rgba(230, 57, 70, 0.05);
 }
 
 .contact-error {
@@ -136,14 +141,37 @@
     color: #e63946;
 }
 
+/* BUTTON */
 .contact-form .btn-cta {
     margin-top: 8px;
     min-width: 160px;
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+    color: white;
+    box-shadow: 0 8px 20px rgba(107, 93, 82, 0.25);
 }
 
 .contact-form .btn-cta:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+/* FAQ */
+
+.info-container section h2 {
+    position: relative;
+}
+
+.info-container section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 20px rgba(107, 93, 82, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-container section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(107, 93, 82, 0.12);
 }
 
 @media (max-width: 768px) {
