@@ -19,6 +19,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import BrandProducts from "./pages/BrandProducts";
 import FAQ from "./pages/FAQ";
+import Shipping from "./pages/Shipping";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/brand/:brand" element={<BrandProducts />} />
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/shipping" element={<Shipping />} />
             </Routes>
         </>
     );

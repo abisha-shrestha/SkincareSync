@@ -53,6 +53,7 @@ export default function Navbar() {
                     <li><Link to="/about" className={isActive('/about') ? 'active' : ''}>About</Link></li>
                     <li><Link to="/contact" className={isActive('/contact') ? 'active' : ''}>Contact</Link></li>
                     <li><Link to="/faq" className={isActive('/faq') ? 'active' : ''}>FAQ</Link></li>
+                    <li><Link to="/shipping" className={isActive('/shipping') ? 'active' : ''}>Shipping</Link></li>
                 </ul>
 
                 <div className="nav-icons">
