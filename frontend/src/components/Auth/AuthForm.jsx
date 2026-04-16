@@ -13,6 +13,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const [showRestorePrompt, setShowRestorePrompt] = useState(false);
     const [restoreEmail, setRestoreEmail] = useState('');
     const [restorePassword, setRestorePassword] = useState('');
+    const [termsAccepted, setTermsAccepted] = useState(false);
 
     // Forgot password state
     const [forgotMode, setForgotMode] = useState(false); 
@@ -50,6 +51,9 @@ export default function AuthForm({ isLogin, toggleAuth }) {
         else if (formData.password.length < 4) newErrors.password = "Password must be at least 4 characters";
         if (!isLogin && !formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password";
         else if (!isLogin && formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+        if (!isLogin && !termsAccepted) {
+        newErrors.terms = "You must accept the terms and conditions";
+    }
         return newErrors;
     };
 
@@ -64,7 +68,8 @@ export default function AuthForm({ isLogin, toggleAuth }) {
             const url = isLogin ? "http://localhost:3000/auth/login" : "http://localhost:3000/auth/signup";
             const body = isLogin
                 ? { email: formData.email, password: formData.password }
-                : { name: formData.name, email: formData.email, password: formData.password };
+                // : { name: formData.name, email: formData.email, password: formData.password };
+                : { name: formData.name, email: formData.email, password: formData.password, termsAccepted: true};
             const response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -220,7 +225,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
 
     const strength = !isLogin ? passwordStrength(formData.password) : null;
 
-    // FORGOT PASSWORD SCREENS
+    // Forgot password screem
     if (forgotMode) {
         return (
             <section className="auth-page">
@@ -242,6 +247,28 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                                         onChange={e => setForgotEmail(e.target.value)}
                                     />
                                 </div>
+                                {!isLogin && (
+                                    <div className="auth-field" style={{ marginTop: "10px" }}>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={termsAccepted}
+                                                onChange={(e) => setTermsAccepted(e.target.checked)}
+                                            />
+                                            <span>
+                                                I agree to{" "}
+                                                <a href="/terms" target="_blank" rel="noopener noreferrer">
+                                                    Terms & Conditions
+                                                </a>
+                                            </span>
+                                        </label>
+                                        {errors.terms && (
+                                            <p className="field-error">
+                                                <FiAlertCircle /> {errors.terms}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                                 <button className="auth-submit-btn" onClick={handleSendOtp} disabled={loading}>
                                     {loading ? <span className="auth-spinner" /> : 'Send OTP'}
                                 </button>
@@ -462,6 +489,32 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                                 : formData.confirmPassword && formData.password === formData.confirmPassword
                                 ? <p className="field-ok"><FiCheck /> Passwords match</p>
                                 : null}
+                        </div>
+                    )}
+
+                    {!isLogin && (
+                        <div className="auth-terms">
+                            <label className="auth-terms-label">
+                                <input
+                                    type="checkbox"
+                                    checked={termsAccepted}
+                                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                                />
+                                <span className="custom-checkbox"></span>
+
+                                <span className="auth-terms-text">
+                                    I agree to{" "}
+                                    <a href="/terms" target="_blank" rel="noopener noreferrer">
+                                        Terms and Conditions
+                                    </a>
+                                </span>
+                            </label>
+
+                            {errors.terms && (
+                                <p className="field-error">
+                                    <FiAlertCircle /> {errors.terms}
+                                </p>
+                            )}
                         </div>
                     )}
 

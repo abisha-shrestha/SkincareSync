@@ -296,6 +296,82 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 
 
+/* terms and conditions checkbox */
+
+.auth-terms {
+    margin-top: 6px;
+}
+
+.auth-terms-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.auth-terms-label input {
+    display: none;
+}
+
+.custom-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.auth-terms-label input:checked + .custom-checkbox {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.custom-checkbox::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.auth-terms-label input:checked + .custom-checkbox::after {
+    opacity: 1;
+}
+
+.auth-terms-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.auth-terms-text a {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.auth-terms-text a:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+}
+
+
+
+
+
 /* responsive */
 @media (max-width: 520px) {
     .auth-container {
@@ -309,3 +385,4 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
         padding-top: 32px;
     }
 }
+

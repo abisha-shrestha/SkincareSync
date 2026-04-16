@@ -6,14 +6,31 @@ const OtpModel = require('../Models/OTP');
 
 const signup = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, termsAccepted } = req.body;
+
+        if (!termsAccepted) {
+            return res.status(400).json({
+                message: "You must accept terms and conditions",
+                success: false
+            });
+        }
+
         const user = await UserModel.findOne({ email });
         if (user) {
             return res.status(409).json({ message: "User already exists, you can login", success: false });
         }
-        const userModel = new UserModel({ name, email, password });
+
+        const userModel = new UserModel({ 
+            name, 
+            email, 
+            password,
+            termsAccepted: true,
+            termsAcceptedAt: new Date()
+        });
+
         userModel.password = await bcrypt.hash(password, 10);
         await userModel.save();
+
         res.status(201).json({ message: "Signup successfully", success: true });
     } catch (err) {
         res.status(500).json({ message: "Internal server error", success: false });

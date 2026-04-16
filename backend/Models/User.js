@@ -8,7 +8,9 @@ const UserSchema = new Schema({
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     skinType: { type: String, enum: ['dry', 'oily', 'combination', 'normal', 'sensitive', ''], default: '' },
     isDeleted: { type: Boolean, default: false },
-    deletedAt: { type: Date, default: null }
+    deletedAt: { type: Date, default: null },
+    termsAccepted: { type: Boolean, required: true },
+    termsAcceptedAt: { type: Date }
 });
 
 const UserModel = mongoose.model('user', UserSchema);
