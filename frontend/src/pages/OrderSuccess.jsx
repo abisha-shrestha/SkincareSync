@@ -10,10 +10,8 @@ export default function OrderSuccess() {
     const location = useLocation();
     const [recommendations, setRecommendations] = useState([]);
 
-    // Must be defined BEFORE the useEffect that uses it
     const orderedItems = location.state?.orderedItems || [];
 
-    console.log("orderedItems:", orderedItems); // remove this once working
 
     useEffect(() => {
         if (!orderedItems.length) return;
@@ -93,3 +91,4 @@ export default function OrderSuccess() {
         </>
     );
 }
+

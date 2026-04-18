@@ -19,6 +19,8 @@ export default function Checkout() {
     const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "" });
     const [errors, setErrors] = useState({});
 
+    const [paymentMethod, setPaymentMethod] = useState("cod"); // "cod" | "esewa"
+
     useEffect(() => {
         if (isBuyNow) {
             const raw = sessionStorage.getItem("buyNowItem");
@@ -119,47 +121,65 @@ export default function Checkout() {
 
     const handlePlaceOrder = async () => {
         const validationErrors = validate();
-
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             toast.error("Please fix form errors");
             return;
         }
 
+        const itemsPayload = cartItems.map(item => ({
+            productId: item.productId?._id || item.productId,
+            name: item.productId?.name || item.name,
+            price: item.price,
+            quantity: item.quantity,
+            imageUrl: item.productId?.imageUrl || item.imageUrl || ""
+        }));
+
         try {
             setPlacing(true);
 
-            const itemsPayload = cartItems.map(item => ({
-                productId: item.productId?._id || item.productId,
-                name: item.productId?.name || item.name,
-                price: item.price,
-                quantity: item.quantity,
-                imageUrl: item.productId?.imageUrl || item.imageUrl || ""
-            }));
-
-            const res = await fetch("http://localhost:3000/api/orders", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userEmail,
-                    deliveryAddress: form,
-                    items: itemsPayload,
-                    isBuyNow
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                if (isBuyNow) sessionStorage.removeItem("buyNowItem");
-
-                navigate("/order-success", {
-                    state: {
-                        orderedItems: cartItems
-                    }
+            if (paymentMethod === "cod") {
+                const res = await fetch("http://localhost:3000/api/orders", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userEmail, deliveryAddress: form, items: itemsPayload, isBuyNow })
                 });
+                const data = await res.json();
+                if (data.success) {
+                    if (isBuyNow) sessionStorage.removeItem("buyNowItem");
+                    navigate("/order-success", { state: { orderedItems: cartItems } });
+                } else {
+                    toast.error(data.message || "Order failed");
+                }
             } else {
-                toast.error(data.message || "Order failed");
+                // eSewa flow
+                const res = await fetch("http://localhost:3000/api/orders/esewa/initiate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userEmail, deliveryAddress: form, items: itemsPayload, isBuyNow })
+                });
+                const data = await res.json();
+                if (!data.success) { toast.error(data.message); return; }
+
+                // Store orderId for after redirect
+                sessionStorage.setItem("pendingOrderId", data.orderId);
+
+                // Build and submit form to eSewa
+                const p = data.esewaPayload;
+                const form_el = document.createElement("form");
+                form_el.method = "POST";
+                form_el.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+
+                Object.entries(p).forEach(([key, val]) => {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = key;
+                    input.value = val;
+                    form_el.appendChild(input);
+                });
+
+                document.body.appendChild(form_el);
+                form_el.submit();
             }
         } catch (err) {
             toast.error("Something went wrong");
@@ -233,40 +253,51 @@ export default function Checkout() {
 
                             <div className="checkout-section">
                                 <h2>Delivery Details</h2>
-
                                 <div className="checkout-form">
-
                                     <div className="checkout-field">
                                         <label>Full Name *</label>
                                         <input name="fullName" value={form.fullName} onChange={handleChange} />
                                         {errors.fullName && <p className="checkout-error">{errors.fullName}</p>}
                                     </div>
-
                                     <div className="checkout-field">
                                         <label>Phone *</label>
                                         <input name="phone" value={form.phone} onChange={handleChange} />
                                         {errors.phone && <p className="checkout-error">{errors.phone}</p>}
                                     </div>
-
                                     <div className="checkout-field">
                                         <label>Address *</label>
                                         <input name="address" value={form.address} onChange={handleChange} />
                                         {errors.address && <p className="checkout-error">{errors.address}</p>}
                                     </div>
-
                                     <div className="checkout-field">
                                         <label>City *</label>
                                         <input name="city" value={form.city} onChange={handleChange} />
                                         {errors.city && <p className="checkout-error">{errors.city}</p>}
                                     </div>
-
                                 </div>
                             </div>
 
+                            {/* SINGLE payment section */}
                             <div className="checkout-section">
                                 <h2>Payment</h2>
-                                <div className="payment-option selected">
-                                    Cash on Delivery
+                                <div className="payment-options">
+                                    <div
+                                        className={`payment-option ${paymentMethod === "cod" ? "selected" : ""}`}
+                                        onClick={() => setPaymentMethod("cod")}
+                                    >
+                                        <div className={`payment-radio ${paymentMethod === "cod" ? "active" : ""}`} />
+                                        <span>Cash on Delivery</span>
+                                    </div>
+                                    <div
+                                        className={`payment-option ${paymentMethod === "esewa" ? "selected" : ""}`}
+                                        onClick={() => setPaymentMethod("esewa")}
+                                    >
+                                        <div className={`payment-radio ${paymentMethod === "esewa" ? "active" : ""}`} />
+                                        <div className="esewa-option-label">
+                                            <span className="esewa-badge">e</span>
+                                            <span>Pay via eSewa</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -316,9 +347,14 @@ export default function Checkout() {
                                 <button
                                     onClick={handlePlaceOrder}
                                     disabled={placing}
-                                    className="btn btn-cta full-width"
+                                    className={`checkout-submit-btn ${paymentMethod === "esewa" ? "checkout-submit-esewa" : "checkout-submit-cod"}`}
                                 >
-                                    {placing ? "Placing..." : "Place Order"}
+                                    {placing
+                                        ? "Processing..."
+                                        : paymentMethod === "esewa"
+                                            ? "Pay with eSewa"
+                                            : "Place Order"
+                                    }
                                 </button>
 
                             </div>
@@ -333,3 +369,5 @@ export default function Checkout() {
         </>
     );
 }
+
+

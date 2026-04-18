@@ -1,9 +1,9 @@
 .order-success-page {
     min-height: 80vh;
     display: flex;
-    flex-direction: column;        /* ← stack vertically */
+    flex-direction: column;        
     align-items: center;
-    justify-content: flex-start;   /* ← don't center vertically */
+    justify-content: flex-start;   
     background: var(--bg-secondary);
     padding: 80px 24px 60px;
 }
@@ -16,7 +16,7 @@
     border: 1px solid var(--border-light);
     max-width: 460px;
     width: 100%;
-    margin-bottom: 60px;           /* ← space between card and recommendations */
+    margin-bottom: 60px;         
 }
 
 .order-success-icon {
@@ -129,6 +129,22 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--accent-dark);
+}
+
+
+
+.esewa-verifying-icon {
+    color: #60bb46;
+    animation: spin 1.2s linear infinite;
+}
+
+.esewa-failed-icon {
+    color: #e63946;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {

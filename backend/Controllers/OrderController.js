@@ -1,6 +1,8 @@
 const Order = require('../Models/Order');
 const Cart = require('../Models/Cart');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -247,4 +249,128 @@ const deleteOrder = async (req, res) => {
     }
 };
 
-module.exports = {placeOrder, getUserOrders, getAllOrders, updateOrderStatus, deleteOrder, cancelOrder};
+
+
+const generateEsewaSignature = (totalAmount, transactionUuid) => {
+    const data = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${process.env.ESEWA_PRODUCT_CODE}`;
+    return crypto
+        .createHmac('sha256', process.env.ESEWA_SECRET_KEY)
+        .update(data)
+        .digest('base64');
+};
+
+// New: initiate eSewa payment (returns signature + fields to frontend)
+const initiateEsewaPayment = async (req, res) => {
+    try {
+        const { userEmail, deliveryAddress, items, isBuyNow } = req.body;
+
+        if (!items || items.length === 0)
+            return res.status(400).json({ success: false, message: "No items provided" });
+
+        const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const shipping = calculateShipping(subtotal, deliveryAddress.city);
+        const totalAmount = subtotal + shipping;
+
+        // Create order in Pending + Unpaid state
+        const transactionUuid = `SSO-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
+        const order = new Order({
+            userEmail,
+            items,
+            deliveryAddress,
+            subtotal,
+            shipping,
+            totalAmount,
+            paymentMethod: 'eSewa',
+            paymentStatus: 'Unpaid',
+            status: 'Pending',
+            esewaTransactionUuid: transactionUuid
+        });
+
+        await order.save();
+
+        const signature = generateEsewaSignature(totalAmount, transactionUuid);
+
+        res.json({
+            success: true,
+            orderId: order._id,
+            esewaPayload: {
+                amount: subtotal,
+                tax_amount: 0,
+                total_amount: totalAmount,
+                transaction_uuid: transactionUuid,
+                product_code: process.env.ESEWA_PRODUCT_CODE,
+                product_service_charge: 0,
+                product_delivery_charge: shipping,
+                success_url: `${process.env.FRONTEND_URL}/esewa-success`,
+                failure_url: `${process.env.FRONTEND_URL}/esewa-failure`,
+                signed_field_names: 'total_amount,transaction_uuid,product_code',
+                signature
+            }
+        });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// New: verify eSewa payment after redirect
+const verifyEsewaPayment = async (req, res) => {
+    try {
+        const { data } = req.query; // base64 from eSewa redirect
+
+        if (!data) return res.status(400).json({ success: false, message: "No data received" });
+
+        const decoded = JSON.parse(Buffer.from(data, 'base64').toString('utf-8'));
+        const {
+            transaction_uuid,
+            total_amount,
+            status,
+            signature,
+            signed_field_names
+        } = decoded;
+
+        if (status !== 'COMPLETE') {
+            return res.status(400).json({ success: false, message: "Payment not complete" });
+        }
+
+        // Re-generate signature to verify
+        const expectedSig = generateEsewaSignature(total_amount, transaction_uuid);
+        if (expectedSig !== signature) {
+            return res.status(400).json({ success: false, message: "Signature mismatch" });
+        }
+
+        // Find and update the order
+        const order = await Order.findOneAndUpdate(
+            { esewaTransactionUuid: transaction_uuid },
+            {
+                $set: {
+                    paymentStatus: 'Paid',
+                    status: 'Processing'
+                }
+            },
+            { new: true }
+        );
+
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        // Clear cart
+        const cart = await Cart.findOne({ userId: order.userEmail });
+        if (cart) {
+            const orderedIds = order.items.map(i => i.productId.toString());
+            cart.items = cart.items.filter(item => !orderedIds.includes(item.productId.toString()));
+            await cart.save();
+        }
+
+        sendOrderConfirmation(order.userEmail, order).catch(console.error);
+
+        res.json({ success: true, order });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+
+module.exports = { placeOrder, getUserOrders, getAllOrders, updateOrderStatus, deleteOrder, cancelOrder, initiateEsewaPayment, verifyEsewaPayment };
+

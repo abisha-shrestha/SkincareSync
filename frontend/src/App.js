@@ -20,6 +20,8 @@ import Terms from "./pages/Terms";
 import BrandProducts from "./pages/BrandProducts";
 import FAQ from "./pages/FAQ";
 import Shipping from "./pages/Shipping";
+import EsewaSuccess from "./pages/EsewaSuccess";
+import EsewaFailure from "./pages/EsewaFailure";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -55,6 +57,8 @@ function App() {
                 <Route path="/brand/:brand" element={<BrandProducts />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/shipping" element={<Shipping />} />
+                <Route path="/esewa-success" element={<EsewaSuccess />} />
+                <Route path="/esewa-failure" element={<EsewaFailure />} />
             </Routes>
         </>
     );
