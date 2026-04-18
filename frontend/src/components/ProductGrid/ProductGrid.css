@@ -1,7 +1,7 @@
-/* ── PROMO BANNER ── */
+/*  PROMO BANNER  */
 .promo-banner {
-    /* background: var(--bg-subtle); */
-    background: #e3d9cb;
+    background: var(--bg-subtle);
+    /* background: #e3d9cb; */
     color: var(--text-secondary);
     text-align: center;
     padding: 9px 24px;
@@ -26,15 +26,24 @@
 
 .promo-banner strong {
     font-weight: 600;
-    color: var(--accent);
+    color: #f3e1d6;
 }
 
-@keyframes fadeSlide {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+
+/* LIGHT MODE → make banner dark */
+:root .promo-banner {
+    background: #9a8880;
+    color: #f5ede8;
 }
 
-/* ── PAGE ── */
+/* DARK MODE → make banner lighter */
+[data-theme="dark"] .promo-banner {
+    background: #957f6f;
+    color: #f0e6df;
+}
+
+
+/*  PAGE  */
 .products-page {
     padding: 0 6rem 80px;
     background: var(--bg-secondary);
@@ -54,7 +63,8 @@
 }
 
 .products-header .label {
-    font-size: 12px;
+    font-size: 15px;
+    font-weight: 900;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--text-muted);
@@ -68,7 +78,7 @@
     margin: 0 auto;
 }
 
-/* ── SKIN TYPE BANNER ── */
+/*  SKIN TYPE BANNER  */
 .skin-type-banner {
     display: flex;
     justify-content: space-between;
@@ -116,14 +126,14 @@
     border-color: var(--accent-dark);
 }
 
-/* ── LAYOUT: SIDEBAR + MAIN ── */
+/*  LAYOUT: SIDEBAR + MAIN ─ */
 .products-layout {
     display: flex;
     gap: 32px;
     align-items: flex-start; 
 }
 
-/* ── FILTER SIDEBAR ── */
+/*  FILTER SIDEBAR  */
 .filters-sidebar {
     width: 240px;
     flex-shrink: 0;
@@ -189,7 +199,7 @@
 
 .filter-clear-all:hover { text-decoration: underline; }
 
-/* ── FILTER SECTIONS ── */
+/*  FILTER SECTIONS  */
 .filter-section {
     padding: 16px 0;
     border-bottom: 1px solid var(--border-light);
@@ -227,7 +237,7 @@
     font-family: inherit;
 }
 
-/* ── FILTER CHIPS ── */
+/*  FILTER CHIPS  */
 .filter-chip-group {
     display: flex;
     flex-wrap: wrap;
@@ -259,7 +269,7 @@
     font-weight: 500;
 }
 
-/* ── SORT SELECT ── */
+/*  SORT SELECT  */
 .filter-select {
     width: 100%;
     padding: 8px 12px;
@@ -275,7 +285,7 @@
 
 .filter-select:focus { border-color: var(--accent); }
 
-/* ── PRICE RANGE ── */
+/*  PRICE RANGE  */
 .filter-range-label {
     font-size: 11px;
     color: var(--accent);
@@ -339,7 +349,7 @@
     flex-shrink: 0;
 }
 
-/* ── SINGLE RANGE SLIDER ── */
+/*  SINGLE RANGE SLIDER  */
 .filter-single-range {
     width: 100%;
     height: 4px;
@@ -370,7 +380,7 @@
     margin-top: 6px;
 }
 
-/* ── RATING FILTER ── */
+/*  RATING FILTER  */
 .filter-rating-group {
     display: flex;
     gap: 6px;
@@ -404,7 +414,7 @@
     font-weight: 500;
 }
 
-/* ── PRODUCTS MAIN AREA ── */
+/*  PRODUCTS MAIN AREA  */
 .products-main {
     flex: 1;
     min-width: 0;
@@ -442,7 +452,7 @@
     color: var(--text-muted);
 }
 
-/* ── EMPTY STATE ── */
+/*  EMPTY STATE  */
 .products-empty {
     text-align: center;
     padding: 80px 20px;
@@ -450,14 +460,14 @@
     font-size: 15px;
 }
 
-/* ── PRODUCT GRID ── */
+/*  PRODUCT GRID  */
 .products-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
 }
 
-/* ── PRODUCT CARD ── */
+/*  PRODUCT CARD  */
 .product-card {
     background: var(--bg-card);
     padding: 20px;
@@ -526,7 +536,7 @@
     font-size: 16px; 
 }
 
-/* ── HOME SECTION ── */
+/*  HOME SECTION  */
 .home-products {
     padding: 0 6rem 80px;
     background: var(--bg-secondary);
@@ -548,7 +558,13 @@
     letter-spacing: 0.3px;
 }
 
-/* ── RESPONSIVE ── */
+/*  RESPONSIVE  */
+
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 1024px) {
     .products-grid { grid-template-columns: repeat(2, 1fr); }
     .filters-sidebar { width: 200px; }

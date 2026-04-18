@@ -8,8 +8,8 @@ import "../components/ProductGrid/ProductGrid.css";
 const BANNERS = [
     { emoji: "🚚", text: "Free delivery on orders above", highlight: "Rs. 4,500" },
     { emoji: "✨", text: "New arrivals added every week -", highlight: "Shop fresh picks" },
-    { emoji: "🌿", text: "Clean ingredients, real results -", highlight: "Honest skincare only" },
     { emoji: "💌", text: "Take the quiz and find your", highlight: "perfect routine" },
+    { emoji: "🌿", text: "Clean ingredients, real results -", highlight: "Honest skincare only" }
 ];
 
 export default function Products() {
