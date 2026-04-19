@@ -27,7 +27,8 @@ const getProduct = async (req, res) => {
 const getRoutine = async (req, res) => {
     try {
         const { skinType } = req.query;
-        const steps = ['Cleanser', 'Toner', 'Hydration'];
+        const steps = ['Cleanser', 'Toner', 'Moisturizer', 'Sunscreen'];
+
         const routine = await Promise.all(
             steps.map(category =>
                 Product.findOne({
@@ -43,3 +44,6 @@ const getRoutine = async (req, res) => {
 };
 
 module.exports = { getProducts, getProduct, getRoutine };
+
+
+// const steps = ['Cleanser', 'Toner', 'Moisturizer', 'Sunscreen'];
