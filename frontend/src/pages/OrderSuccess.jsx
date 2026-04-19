@@ -29,8 +29,7 @@ export default function OrderSuccess() {
                     orderedItems.map(item => item.brand).filter(Boolean)
                 );
 
-                console.log("orderedCategories:", [...orderedCategories]); // remove once working
-                console.log("orderedBrands:", [...orderedBrands]);         // remove once working
+
 
                 const suggestions = all
                     .filter(p =>

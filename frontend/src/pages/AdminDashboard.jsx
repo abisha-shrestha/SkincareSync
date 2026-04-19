@@ -676,7 +676,7 @@ export default function AdminDashboard() {
                                             </tr>
                                             {expandedOrder === order._id && (
                                                 <tr key={`${order._id}-expanded`} className="order-items-row">
-                                                    <td colSpan={8}>
+                                                    <td colSpan={10}> 
                                                         <div className="order-items-expanded">
                                                             <div className="order-items-expanded-header">
                                                                 <span>Order items</span>
