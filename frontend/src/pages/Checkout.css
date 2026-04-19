@@ -106,17 +106,25 @@
 
 .checkout-item {
     display: grid;
-    grid-template-columns: 50px 1fr auto;
+    grid-template-columns: 56px 1fr auto;
     align-items: center;
     gap: 12px;
 }
 
 .checkout-item-image {
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
     background: var(--bg-subtle);
     border-radius: 8px;
     overflow: hidden;
+}
+
+.checkout-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .checkout-item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; color: var(--text-primary); }

@@ -314,7 +314,14 @@ export default function Checkout() {
                                     {cartItems.map((item, idx) => (
                                         <div key={idx} className="checkout-item">
                                             <div className="checkout-item-image">
-                                                <img src={item.productId?.imageUrl || item.imageUrl} />
+                                                {/* <img src={item.productId?.imageUrl || item.imageUrl} /> */}
+
+                                                <img
+                                                    src={item.productId?.imageUrl || item.imageUrl || ""}
+                                                    alt={item.productId?.name || item.name || "Product"}
+                                                    onError={(e) => { e.target.style.display = "none"; }}
+                                                />
+
                                             </div>
                                             <div>
                                                 <p>{item.productId?.name || item.name}</p>

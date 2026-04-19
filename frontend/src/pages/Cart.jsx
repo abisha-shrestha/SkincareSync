@@ -198,6 +198,25 @@ export default function Cart() {
                                 </div>
 
                                 <div className="cart-summary">
+                                    <h2>Order Summary</h2>
+                                    <div className="checkout-items">
+                                        {cartItems.filter(item => item.selected).map((item, idx) => (
+                                            <div key={idx} className="checkout-item">
+                                                <div className="checkout-item-image">
+                                                    <img
+                                                        src={item.productId?.imageUrl || item.imageUrl}
+                                                        alt={item.productId?.name || item.name}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <p>{item.productId?.name || item.name}</p>
+                                                    <p>Qty: {item.quantity}</p>
+                                                </div>
+                                                <p>Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
                                     <div className="summary-selected-note">
                                         {selectedCount} of {cartItems.length} item{cartItems.length !== 1 ? "s" : ""} selected
                                     </div>
