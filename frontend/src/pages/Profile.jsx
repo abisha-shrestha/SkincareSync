@@ -398,7 +398,7 @@ export default function Profile() {
                                                     type="text"
                                                     value={profile.city}
                                                     onChange={e => setProfile({ ...profile, city: e.target.value })}
-                                                    placeholder="Kathmandu"
+                                                    placeholder="Pokhara"
                                                 />
                                             </div>
                                         </div>
@@ -546,7 +546,7 @@ export default function Profile() {
                                                     </div>
                                                     <div className="form-group">
                                                         <label>City <span className="required">*</span></label>
-                                                        <input type="text" value={addressForm.city} onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} placeholder="Kathmandu" />
+                                                        <input type="text" value={addressForm.city} onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} placeholder="Pokhara" />
                                                         {addressErrors.city && <p className="field-error">{addressErrors.city}</p>}
                                                     </div>
                                                 </div>

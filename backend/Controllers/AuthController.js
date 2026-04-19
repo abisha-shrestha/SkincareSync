@@ -42,12 +42,12 @@ const login = async (req, res) => {
         const { email, password } = req.body;
         const user = await UserModel.findOne({ email });
         if (!user) {
-            return res.status(403).json({ message: "Auth failed, email doesn't exist", success: false });
+            return res.status(403).json({ message: "Invalid credentials. Please try again.", success: false });
         }
 
         const isPassEqual = await bcrypt.compare(password, user.password);
         if (!isPassEqual) {
-            return res.status(403).json({ message: "Auth failed, email doesn't exist", success: false });
+            return res.status(403).json({ message: "Invalid credentials. Please try again.", success: false });
         }
 
         // Soft-deleted - return special flag instead of blocking
