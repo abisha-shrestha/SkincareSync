@@ -354,7 +354,7 @@ export default function AdminDashboard() {
         const headers = Object.keys(reportData[0]);
         const rows = reportData.map(row => headers.map(h => row[h]));
 
-        // A simple HTML table that Excel can open
+        // An HTML table that Excel can open
         const tableHTML = `
             <html><head><meta charset="UTF-8"></head><body>
             <table>
@@ -641,7 +641,6 @@ export default function AdminDashboard() {
                                                         {order.paymentMethod === 'eSewa' ? 'eSewa' : 'COD'}
                                                     </span>
                                                 </td>
-
 
                                                 <td>
                                                     <span style={{

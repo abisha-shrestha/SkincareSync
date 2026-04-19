@@ -8,24 +8,36 @@ export default function EsewaSuccess() {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const data = params.get("data");
+        const pendingOrder = JSON.parse(sessionStorage.getItem("pendingOrder") || "null");
 
-        if (!data) { navigate("/orders"); return; }
+        if (!data || !pendingOrder) {
+            navigate("/orders");
+            return;
+        }
 
-        fetch(`http://localhost:3000/api/orders/esewa/verify?data=${encodeURIComponent(data)}`)
+        fetch(`http://localhost:3000/api/orders/esewa/verify?data=${encodeURIComponent(data)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pendingOrder })
+        })
             .then(res => res.json())
             .then(result => {
-                sessionStorage.removeItem("pendingOrderId");
+                sessionStorage.removeItem("pendingOrder");
                 sessionStorage.removeItem("buyNowItem");
                 if (result.success) {
                     toast.success("Payment successful!");
                     navigate("/order-success", { state: { orderedItems: result.order.items } });
                 } else {
                     toast.error(result.message || "Payment verification failed");
-                    navigate("/orders");
+                    navigate("/checkout"); // back to checkout, cart intact
                 }
             })
-            .catch(() => navigate("/orders"));
+            .catch(() => navigate("/checkout"));
     }, []);
 
-    return <div style={{ padding: "140px 4rem", textAlign: "center" }}><h2>Verifying payment...</h2></div>;
+    return (
+        <div style={{ padding: "140px 4rem", textAlign: "center" }}>
+            <h2>Verifying payment...</h2>
+        </div>
+    );
 }

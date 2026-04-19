@@ -18,7 +18,7 @@ router.put('/:id/status', adminOnly, updateOrderStatus);
 router.put('/:id/cancel', cancelOrder);
 router.delete('/:id', adminOnly, deleteOrder);
 router.post('/esewa/initiate', initiateEsewaPayment);
-router.get('/esewa/verify', verifyEsewaPayment);
+router.post('/esewa/verify', verifyEsewaPayment);
 
 module.exports = router;
 

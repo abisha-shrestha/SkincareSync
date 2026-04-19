@@ -252,7 +252,8 @@ const deleteOrder = async (req, res) => {
 
 
 const generateEsewaSignature = (totalAmount, transactionUuid) => {
-    const data = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${process.env.ESEWA_PRODUCT_CODE}`;
+    const normalized = parseFloat(String(totalAmount).replace(/,/g, ''));
+    const data = `total_amount=${normalized},transaction_uuid=${transactionUuid},product_code=${process.env.ESEWA_PRODUCT_CODE}`;
     return crypto
         .createHmac('sha256', process.env.ESEWA_SECRET_KEY)
         .update(data)
@@ -271,29 +272,12 @@ const initiateEsewaPayment = async (req, res) => {
         const shipping = calculateShipping(subtotal, deliveryAddress.city);
         const totalAmount = subtotal + shipping;
 
-        // Create order in Pending + Unpaid state
         const transactionUuid = `SSO-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-
-        const order = new Order({
-            userEmail,
-            items,
-            deliveryAddress,
-            subtotal,
-            shipping,
-            totalAmount,
-            paymentMethod: 'eSewa',
-            paymentStatus: 'Unpaid',
-            status: 'Pending',
-            esewaTransactionUuid: transactionUuid
-        });
-
-        await order.save();
-
         const signature = generateEsewaSignature(totalAmount, transactionUuid);
 
+        // Only save after verified
         res.json({
             success: true,
-            orderId: order._id,
             esewaPayload: {
                 amount: subtotal,
                 tax_amount: 0,
@@ -306,6 +290,17 @@ const initiateEsewaPayment = async (req, res) => {
                 failure_url: `${process.env.FRONTEND_URL}/esewa-failure`,
                 signed_field_names: 'total_amount,transaction_uuid,product_code',
                 signature
+            },
+            // Pass order data through so frontend can store it in sessionStorage
+            pendingOrder: {
+                userEmail,
+                deliveryAddress,
+                items,
+                isBuyNow,
+                subtotal,
+                shipping,
+                totalAmount,
+                transactionUuid
             }
         });
 
@@ -317,52 +312,77 @@ const initiateEsewaPayment = async (req, res) => {
 // New: verify eSewa payment after redirect
 const verifyEsewaPayment = async (req, res) => {
     try {
-        const { data } = req.query; // base64 from eSewa redirect
+        const { data } = req.query;
 
         if (!data) return res.status(400).json({ success: false, message: "No data received" });
 
         const decoded = JSON.parse(Buffer.from(data, 'base64').toString('utf-8'));
-        const {
-            transaction_uuid,
-            total_amount,
-            status,
-            signature,
-            signed_field_names
-        } = decoded;
+        const { transaction_uuid, total_amount, status, signature } = decoded;
+
+        //  TEMP DEBUG
+        // console.log("eSewa decoded response:", decoded);
+        // console.log("total_amount raw value:", total_amount);
+        // console.log("total_amount type:", typeof total_amount);
+        // console.log("transaction_uuid:", transaction_uuid);
 
         if (status !== 'COMPLETE') {
             return res.status(400).json({ success: false, message: "Payment not complete" });
         }
 
-        // Re-generate signature to verify
-        const expectedSig = generateEsewaSignature(total_amount, transaction_uuid);
+        const fieldNames = decoded.signed_field_names.split(',');
+        const signatureData = fieldNames.map(field => `${field}=${decoded[field]}`).join(',');
+
+        const expectedSig = crypto
+            .createHmac('sha256', process.env.ESEWA_SECRET_KEY)
+            .update(signatureData)
+            .digest('base64');
+
+        console.log("Signing string:", signatureData);
+        console.log("Expected signature:", expectedSig);
+        console.log("eSewa signature:  ", signature);
+
         if (expectedSig !== signature) {
             return res.status(400).json({ success: false, message: "Signature mismatch" });
         }
+        const { pendingOrder } = req.body;
 
-        // Find and update the order
-        const order = await Order.findOneAndUpdate(
-            { esewaTransactionUuid: transaction_uuid },
-            {
-                $set: {
-                    paymentStatus: 'Paid',
-                    status: 'Processing'
-                }
-            },
-            { new: true }
-        );
-
-        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
-
-        // Clear cart
-        const cart = await Cart.findOne({ userId: order.userEmail });
-        if (cart) {
-            const orderedIds = order.items.map(i => i.productId.toString());
-            cart.items = cart.items.filter(item => !orderedIds.includes(item.productId.toString()));
-            await cart.save();
+        if (!pendingOrder) {
+            return res.status(400).json({ success: false, message: "Missing order data" });
         }
 
-        sendOrderConfirmation(order.userEmail, order).catch(console.error);
+        if (pendingOrder.transactionUuid !== transaction_uuid) {
+            return res.status(400).json({ success: false, message: "Transaction UUID mismatch" });
+        }
+
+        const order = new Order({
+            userEmail: pendingOrder.userEmail,
+            items: pendingOrder.items,
+            deliveryAddress: pendingOrder.deliveryAddress,
+            subtotal: pendingOrder.subtotal,
+            shipping: pendingOrder.shipping,
+            totalAmount: pendingOrder.totalAmount,
+            paymentMethod: 'eSewa',
+            paymentStatus: 'Paid',
+            status: 'Processing',
+            esewaTransactionUuid: transaction_uuid
+        });
+
+        await order.save();
+
+        if (!pendingOrder.isBuyNow) {
+            const cart = await Cart.findOne({ userId: pendingOrder.userEmail });
+            if (cart) {
+                const orderedIds = pendingOrder.items.map(i =>
+                    (i.productId?._id || i.productId).toString()
+                );
+                cart.items = cart.items.filter(
+                    item => !orderedIds.includes(item.productId.toString())
+                );
+                await cart.save();
+            }
+        }
+
+        sendOrderConfirmation(pendingOrder.userEmail, order).catch(console.error);
 
         res.json({ success: true, order });
 

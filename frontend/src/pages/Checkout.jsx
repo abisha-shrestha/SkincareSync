@@ -162,7 +162,7 @@ export default function Checkout() {
                 if (!data.success) { toast.error(data.message); return; }
 
                 // Store orderId for after redirect
-                sessionStorage.setItem("pendingOrderId", data.orderId);
+                sessionStorage.setItem("pendingOrder", JSON.stringify(data.pendingOrder));
 
                 // Build and submit form to eSewa
                 const p = data.esewaPayload;
