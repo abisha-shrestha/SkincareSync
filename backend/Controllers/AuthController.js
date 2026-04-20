@@ -90,7 +90,7 @@ const sendOtp = async (req, res) => {
         if (!user) return res.status(404).json({ success: false, message: "No account found with this email" });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
 
         await OtpModel.deleteMany({ email });
         await OtpModel.create({ email, otp, expiresAt });
@@ -99,7 +99,7 @@ const sendOtp = async (req, res) => {
             from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
             to: email,
             subject: 'Your OTP for password reset',
-            text: `Your OTP is ${otp}. It expires in 10 minutes.`
+            text: `Your OTP is ${otp}. It expires in 3 minutes.`
         });
 
         res.json({ success: true, message: "OTP sent to your email" });
