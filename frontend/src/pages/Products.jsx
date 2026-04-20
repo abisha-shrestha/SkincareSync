@@ -9,7 +9,7 @@ const BANNERS = [
     {text: "Free delivery on orders above", highlight: "Rs. 4,500" },
     {text: "New arrivals added every week -", highlight: "Shop fresh picks" },
     {text: "Take the quiz and find your", highlight: "perfect routine" },
-    { text: "Clean ingredients, real results -", highlight: "Honest skincare only" }
+    {text: "Clean ingredients, real results -", highlight: "Honest skincare only" }
 ];
 
 export default function Products() {
