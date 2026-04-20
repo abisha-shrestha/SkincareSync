@@ -337,10 +337,6 @@ const verifyEsewaPayment = async (req, res) => {
             .update(signatureData)
             .digest('base64');
 
-        console.log("Signing string:", signatureData);
-        console.log("Expected signature:", expectedSig);
-        console.log("eSewa signature:  ", signature);
-
         if (expectedSig !== signature) {
             return res.status(400).json({ success: false, message: "Signature mismatch" });
         }
