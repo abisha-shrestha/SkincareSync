@@ -46,4 +46,3 @@ const getRoutine = async (req, res) => {
 module.exports = { getProducts, getProduct, getRoutine };
 
 
-// const steps = ['Cleanser', 'Toner', 'Moisturizer', 'Sunscreen'];
