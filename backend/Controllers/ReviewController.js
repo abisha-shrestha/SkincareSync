@@ -40,8 +40,6 @@ const addReview = async (req, res) => {
         }
 
         const review = await Review.create({ productId, userEmail, userName, rating, comment });
-
-        // Recalculate after adding
         await recalculateRating(productId);
 
         res.status(201).json({ success: true, review });
@@ -65,7 +63,6 @@ const updateReview = async (req, res) => {
         );
         if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
 
-        // Recalculate after editing
         await recalculateRating(productId);
 
         res.json({ success: true, review });
@@ -80,8 +77,6 @@ const deleteReview = async (req, res) => {
         const { userEmail } = req.body;
 
         await Review.findOneAndDelete({ productId, userEmail });
-
-        // Recalculate after deleting
         await recalculateRating(productId);
 
         res.json({ success: true });
@@ -90,4 +85,37 @@ const deleteReview = async (req, res) => {
     }
 };
 
-module.exports = { getReviews, addReview, updateReview, deleteReview };
+// Admin-only 
+
+// GET /api/admin/reviews  — all reviews across all products
+const getAllReviews = async (req, res) => {
+    try {
+        const reviews = await Review.find({})
+            .populate('productId', 'name imageUrl')   // pull product name + image
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, reviews, total: reviews.length });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// DELETE /api/admin/reviews/:reviewId  — delete any review by its _id
+const adminDeleteReview = async (req, res) => {
+    try {
+        const { reviewId } = req.params;
+
+        const review = await Review.findById(reviewId);
+        if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+
+        const { productId } = review;
+        await Review.findByIdAndDelete(reviewId);
+        await recalculateRating(productId);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+module.exports = { getReviews, addReview, updateReview, deleteReview, getAllReviews, adminDeleteReview };

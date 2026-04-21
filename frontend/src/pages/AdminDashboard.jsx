@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut, FiSun, FiMoon, FiFileText, FiGrid, FiList } from "react-icons/fi";
+import { FiUsers, FiPackage, FiShoppingCart, FiClock, FiTrash2, FiEdit2, FiPlus, FiX, FiLogOut, FiSun, FiMoon, FiFileText, FiGrid, FiList, FiStar, FiMessageSquare } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useTheme } from "../ThemeContext";
 import "./AdminDashboard.css";
@@ -25,13 +25,20 @@ export default function AdminDashboard() {
         name: "", brand: "", price: "", category: "", description: "", skinTypes: "", imageUrl: ""
     });
 
+    // ── Reviews state ──────────────────────────────────────────────────────────
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [reviewSearch, setReviewSearch] = useState("");
+    const [reviewRatingFilter, setReviewRatingFilter] = useState("all"); // "all" | "1"–"5"
+
     const tabIcons = {
-    overview: <FiGrid size={14} />,
-    orders: <FiShoppingCart size={14} />,
-    products: <FiPackage size={14} />,
-    users: <FiUsers size={14} />,
-    reports: <FiFileText size={14} />,
-};
+        overview:  <FiGrid size={14} />,
+        orders:    <FiShoppingCart size={14} />,
+        products:  <FiPackage size={14} />,
+        users:     <FiUsers size={14} />,
+        reviews:   <FiMessageSquare size={14} />,
+        reports:   <FiFileText size={14} />,
+    };
 
     // Reports state
     const [reportType, setReportType] = useState("sales");
@@ -55,12 +62,13 @@ export default function AdminDashboard() {
         const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
         if (!token || role !== "admin") navigate("/auth");
-    }, []); 
+    }, []);
 
-    useEffect(() => { fetchStats(); fetchAnalytics(); fetchRecentOrders(); }, []); 
+    useEffect(() => { fetchStats(); fetchAnalytics(); fetchRecentOrders(); }, []);
     useEffect(() => { if (activeTab === "users") fetchUsers(); }, [activeTab]);
     useEffect(() => { if (activeTab === "products") fetchProducts(); }, [activeTab]);
     useEffect(() => { if (activeTab === "orders") fetchOrders(); }, [activeTab]);
+    useEffect(() => { if (activeTab === "reviews") fetchAllReviews(); }, [activeTab]);
 
     const fetchStats = async () => {
         try {
@@ -111,6 +119,67 @@ export default function AdminDashboard() {
         } catch (err) { console.error(err); }
     };
 
+    //  Reviews fetching & deletion 
+    const fetchAllReviews = async () => {
+        setReviewsLoading(true);
+        try {
+            const res = await fetch("http://localhost:3000/api/admin/reviews", { headers: getHeaders() });
+            const data = await res.json();
+            setReviews(data.reviews || []);
+        } catch (err) { console.error(err); }
+        finally { setReviewsLoading(false); }
+    };
+
+    const deleteReview = async (reviewId) => {
+        if (!window.confirm("Delete this review? This cannot be undone.")) return;
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/reviews/${reviewId}`, {
+                method: "DELETE",
+                headers: getHeaders()
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success("Review deleted");
+                fetchAllReviews();
+            } else {
+                toast.error(data.message || "Failed to delete review");
+            }
+        } catch (err) {
+            toast.error("Something went wrong");
+        }
+    };
+
+    // Filtered reviews (search + star filter)
+    const filteredReviews = reviews.filter(r => {
+        const matchesRating = reviewRatingFilter === "all" || r.rating === Number(reviewRatingFilter);
+        const query = reviewSearch.toLowerCase();
+        const matchesSearch =
+            !query ||
+            r.userName?.toLowerCase().includes(query) ||
+            r.userEmail?.toLowerCase().includes(query) ||
+            r.comment?.toLowerCase().includes(query) ||
+            r.productId?.name?.toLowerCase().includes(query);
+        return matchesRating && matchesSearch;
+    });
+
+    //  StarDisplay helper 
+    const StarDisplay = ({ rating }) => (
+        <div style={{ display: "flex", gap: "2px" }}>
+            {[1, 2, 3, 4, 5].map(n => (
+                <FiStar
+                    key={n}
+                    size={13}
+                    style={{
+                        fill: n <= rating ? "var(--accent)" : "none",
+                        color: n <= rating ? "var(--accent)" : "var(--border)",
+                        flexShrink: 0,
+                    }}
+                />
+            ))}
+        </div>
+    );
+
+    //  Existing helpers 
     const deleteUser = async (id) => {
         if (!window.confirm("Delete this user?")) return;
         await fetch(`http://localhost:3000/api/admin/users/${id}`, { method: "DELETE", headers: getHeaders() });
@@ -132,16 +201,9 @@ export default function AdminDashboard() {
                 headers: getHeaders(),
                 body: JSON.stringify({ status })
             });
-
             const data = await res.json();
-
-            if (!res.ok || !data.success) {
-                throw new Error(data.message || "Failed to update order");
-            }
-
-            fetchOrders();
-            fetchStats();
-
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to update order");
+            fetchOrders(); fetchStats();
             toast.success(`Order marked as ${status}`);
         } catch (err) {
             console.error(err);
@@ -210,8 +272,7 @@ export default function AdminDashboard() {
         toast.success(editingProduct ? "Product updated" : "Product added");
     };
 
-    // Reports
-
+    // ── Reports ────────────────────────────────────────────────────────────────
     const generateReport = async () => {
         setGeneratingReport(true);
         setReportGenerated(false);
@@ -229,7 +290,6 @@ export default function AdminDashboard() {
             const allProducts = productsData.products || [];
             const allUsers = usersData.users || [];
 
-            // Apply date filter
             if (dateFrom) allOrders = allOrders.filter(o => new Date(o.createdAt) >= new Date(dateFrom));
             if (dateTo) allOrders = allOrders.filter(o => new Date(o.createdAt) <= new Date(dateTo + "T23:59:59"));
 
@@ -353,8 +413,6 @@ export default function AdminDashboard() {
         if (!reportData.length) return;
         const headers = Object.keys(reportData[0]);
         const rows = reportData.map(row => headers.map(h => row[h]));
-
-        // An HTML table that Excel can open
         const tableHTML = `
             <html><head><meta charset="UTF-8"></head><body>
             <table>
@@ -374,22 +432,20 @@ export default function AdminDashboard() {
     };
 
     const reportTypes = [
-        { value: "sales", label: "Sales Report", desc: "Revenue and order summaries" },
-        { value: "orders", label: "Order Details", desc: "Line-by-line order breakdown" },
-        { value: "products", label: "Product Performance", desc: "Units sold and revenue per product" },
-        { value: "customers", label: "Customer Report", desc: "Spending and order history per customer" },
-        { value: "skintypes", label: "Skin Type Insights", desc: "Purchases and revenue by skin type" },
+        { value: "sales",     label: "Sales Report",         desc: "Revenue and order summaries" },
+        { value: "orders",    label: "Order Details",         desc: "Line-by-line order breakdown" },
+        { value: "products",  label: "Product Performance",   desc: "Units sold and revenue per product" },
+        { value: "customers", label: "Customer Report",       desc: "Spending and order history per customer" },
+        { value: "skintypes", label: "Skin Type Insights",    desc: "Purchases and revenue by skin type" },
     ];
-
-
 
     const logout = () => { localStorage.clear(); navigate("/auth"); };
 
     const statCards = [
-        { label: "Total Users", value: stats.totalUsers, icon: <FiUsers />, tab: "users" },
-        { label: "Total Products", value: stats.totalProducts, icon: <FiPackage />, tab: "products" },
-        { label: "Total Orders", value: stats.totalOrders, icon: <FiShoppingCart />, tab: "orders" },
-        { label: "Pending Orders", value: stats.pendingOrders, icon: <FiClock />, tab: "orders" },
+        { label: "Total Users",     value: stats.totalUsers,    icon: <FiUsers />,        tab: "users" },
+        { label: "Total Products",  value: stats.totalProducts, icon: <FiPackage />,      tab: "products" },
+        { label: "Total Orders",    value: stats.totalOrders,   icon: <FiShoppingCart />, tab: "orders" },
+        { label: "Pending Orders",  value: stats.pendingOrders, icon: <FiClock />,        tab: "orders" },
     ];
 
     const CustomTooltip = ({ active, payload, label }) => {
@@ -411,13 +467,12 @@ export default function AdminDashboard() {
     return (
         <div className="admin-layout">
             <aside className="admin-sidebar">
-                {/* Clickable brand → overview */}
                 <div className="admin-brand" onClick={() => setActiveTab("overview")} style={{ cursor: "pointer" }}>
                     SkincareSync
                 </div>
                 <p className="admin-role-label">Admin Panel</p>
                 <nav className="admin-nav">
-                    {["overview", "orders", "products", "users", "reports"].map(tab => (
+                    {["overview", "orders", "products", "users", "reviews", "reports"].map(tab => (
                         <button
                             key={tab}
                             className={`admin-nav-btn ${activeTab === tab ? "active" : ""}`}
@@ -451,7 +506,7 @@ export default function AdminDashboard() {
                     )}
                 </div>
 
-                {/* OVERVIEW */}
+                {/*  OVERVIEW  */}
                 {activeTab === "overview" && (
                     <>
                         <div className="admin-stats-grid">
@@ -483,13 +538,10 @@ export default function AdminDashboard() {
                             </ResponsiveContainer>
                         </div>
 
-                        {/* RECENT ORDERS */}
                         <div className="recent-orders-card">
                             <div className="recent-orders-header">
                                 <h2 className="analytics-title" style={{ margin: 0 }}>Recent Orders</h2>
-                                <button className="recent-orders-viewall" onClick={() => setActiveTab("orders")}>
-                                    View All →
-                                </button>
+                                <button className="recent-orders-viewall" onClick={() => setActiveTab("orders")}>View All →</button>
                             </div>
                             {recentOrders.length === 0 ? (
                                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', padding: '20px 0' }}>No orders yet.</p>
@@ -497,14 +549,8 @@ export default function AdminDashboard() {
                                 <table className="admin-table" style={{ marginTop: '16px' }}>
                                     <thead>
                                         <tr>
-                                            <th>Order ID</th>
-                                            <th>Customer</th>
-                                            <th>Items</th>
-                                            <th>Total</th>
-                                            <th>Payment</th>
-                                            <th>Method</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
+                                            <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th>
+                                            <th>Payment</th><th>Method</th><th>Status</th><th>Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -520,45 +566,19 @@ export default function AdminDashboard() {
                                                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                                                     </span>
                                                 </td>
-
                                                 <td style={{ fontWeight: 600 }}>Rs. {order.totalAmount.toLocaleString()}</td>
-
-                                                {/* Payment Method */}
                                                 <td>
-                                                    <span style={{
-                                                        fontSize: '12px',
-                                                        fontWeight: 600,
-                                                        padding: '3px 10px',
-                                                        borderRadius: '20px',
-                                                        background: order.paymentMethod === 'eSewa' ? '#00a3441a' : '#6b5d521a',
-                                                        color: order.paymentMethod === 'eSewa' ? '#00a344' : '#6b5d52',
-                                                    }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: order.paymentMethod === 'eSewa' ? '#00a3441a' : '#6b5d521a', color: order.paymentMethod === 'eSewa' ? '#00a344' : '#6b5d52' }}>
                                                         {order.paymentMethod === 'eSewa' ? 'eSewa' : 'COD'}
                                                     </span>
                                                 </td>
-
                                                 <td>
-                                                    <span style={{
-                                                        color: order.paymentStatus === "Paid" ? "#22c55e" : "#ef4444",
-                                                        fontWeight: 600,
-                                                        fontSize: '13px',
-                                                        background: order.paymentStatus === "Paid" ? '#22c55e18' : '#ef444418',
-                                                        padding: '3px 10px',
-                                                        borderRadius: '20px'
-                                                    }}>
+                                                    <span style={{ color: order.paymentStatus === "Paid" ? "#22c55e" : "#ef4444", fontWeight: 600, fontSize: '13px', background: order.paymentStatus === "Paid" ? '#22c55e18' : '#ef444418', padding: '3px 10px', borderRadius: '20px' }}>
                                                         {order.paymentStatus}
                                                     </span>
                                                 </td>
-                                                
                                                 <td>
-                                                    <span style={{
-                                                        color: statusColor(order.status),
-                                                        fontWeight: 600,
-                                                        fontSize: '13px',
-                                                        background: `${statusColor(order.status)}18`,
-                                                        padding: '3px 10px',
-                                                        borderRadius: '20px'
-                                                    }}>
+                                                    <span style={{ color: statusColor(order.status), fontWeight: 600, fontSize: '13px', background: `${statusColor(order.status)}18`, padding: '3px 10px', borderRadius: '20px' }}>
                                                         {order.status}
                                                     </span>
                                                 </td>
@@ -574,7 +594,7 @@ export default function AdminDashboard() {
                     </>
                 )}
 
-                {/* ORDERS */}
+                {/*  ORDERS  */}
                 {activeTab === "orders" && (
                     <div className="admin-table-wrapper">
                         {orders.length === 0 ? (
@@ -584,15 +604,8 @@ export default function AdminDashboard() {
                                 <thead>
                                     <tr>
                                         <th style={{ width: '40px' }}></th>
-                                        <th>Order ID</th>
-                                        <th>Customer</th>
-                                        <th>Items</th>
-                                        <th>Total</th>
-                                        <th>Payment</th>
-                                        <th>Method</th>
-                                        <th>Status</th>
-                                        <th>Date</th>
-                                        <th>Actions</th>
+                                        <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th>
+                                        <th>Payment</th><th>Method</th><th>Status</th><th>Date</th><th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -602,15 +615,7 @@ export default function AdminDashboard() {
                                                 <td style={{ textAlign: 'center', padding: '14px 8px' }}>
                                                     <button
                                                         onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
-                                                        style={{
-                                                            background: expandedOrder === order._id ? 'var(--accent-light)' : 'none',
-                                                            border: '1px solid var(--border)', borderRadius: '6px',
-                                                            width: '28px', height: '28px', cursor: 'pointer',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            transition: 'all 0.2s',
-                                                            color: expandedOrder === order._id ? 'var(--accent)' : 'var(--text-muted)',
-                                                            fontSize: '12px', flexShrink: 0
-                                                        }}
+                                                        style={{ background: expandedOrder === order._id ? 'var(--accent-light)' : 'none', border: '1px solid var(--border)', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', color: expandedOrder === order._id ? 'var(--accent)' : 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}
                                                     >
                                                         <span className={`order-expand-icon ${expandedOrder === order._id ? 'open' : ''}`}>▸</span>
                                                     </button>
@@ -625,43 +630,19 @@ export default function AdminDashboard() {
                                                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                                                     </span>
                                                 </td>
-
                                                 <td style={{ fontWeight: 600 }}>Rs. {order.totalAmount.toLocaleString()}</td>
-
-                                                {/* Payment Method */}
                                                 <td>
-                                                    <span style={{
-                                                        fontSize: '12px',
-                                                        fontWeight: 600,
-                                                        padding: '3px 10px',
-                                                        borderRadius: '20px',
-                                                        background: order.paymentMethod === 'eSewa' ? '#00a3441a' : '#6b5d521a',
-                                                        color: order.paymentMethod === 'eSewa' ? '#00a344' : '#6b5d52',
-                                                    }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: order.paymentMethod === 'eSewa' ? '#00a3441a' : '#6b5d521a', color: order.paymentMethod === 'eSewa' ? '#00a344' : '#6b5d52' }}>
                                                         {order.paymentMethod === 'eSewa' ? 'eSewa' : 'COD'}
                                                     </span>
                                                 </td>
-
                                                 <td>
-                                                    <span style={{
-                                                        color: order.paymentStatus === "Paid" ? "#22c55e" : "#ef4444",
-                                                        fontWeight: 600,
-                                                        fontSize: '13px',
-                                                        background: order.paymentStatus === "Paid" ? '#22c55e18' : '#ef444418',
-                                                        padding: '3px 10px',
-                                                        borderRadius: '20px'
-                                                    }}>
+                                                    <span style={{ color: order.paymentStatus === "Paid" ? "#22c55e" : "#ef4444", fontWeight: 600, fontSize: '13px', background: order.paymentStatus === "Paid" ? '#22c55e18' : '#ef444418', padding: '3px 10px', borderRadius: '20px' }}>
                                                         {order.paymentStatus}
                                                     </span>
                                                 </td>
-                                                
                                                 <td onClick={e => e.stopPropagation()}>
-                                                    <select
-                                                        value={order.status}
-                                                        onChange={e => updateOrderStatus(order._id, e.target.value)}
-                                                        className="status-select"
-                                                        style={{ borderColor: statusColor(order.status), color: statusColor(order.status), fontWeight: 600 }}
-                                                    >
+                                                    <select value={order.status} onChange={e => updateOrderStatus(order._id, e.target.value)} className="status-select" style={{ borderColor: statusColor(order.status), color: statusColor(order.status), fontWeight: 600 }}>
                                                         {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
                                                             <option key={s} value={s}>{s}</option>
                                                         ))}
@@ -676,7 +657,7 @@ export default function AdminDashboard() {
                                             </tr>
                                             {expandedOrder === order._id && (
                                                 <tr key={`${order._id}-expanded`} className="order-items-row">
-                                                    <td colSpan={10}> 
+                                                    <td colSpan={10}>
                                                         <div className="order-items-expanded">
                                                             <div className="order-items-expanded-header">
                                                                 <span>Order items</span>
@@ -717,14 +698,12 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* PRODUCTS */}
+                {/*  PRODUCTS  */}
                 {activeTab === "products" && (
                     <div className="admin-table-wrapper">
                         <table className="admin-table">
                             <thead>
-                                <tr>
-                                    <th>Image</th><th>Name</th><th>Brand</th><th>Category</th><th>Price</th><th>Actions</th>
-                                </tr>
+                                <tr><th>Image</th><th>Name</th><th>Brand</th><th>Category</th><th>Price</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
                                 {products.map(p => (
@@ -772,11 +751,115 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* REPORTS */}
+                {/* ── REVIEWS ───────────────────────────────────────────────── */}
+                {activeTab === "reviews" && (
+                    <div className="admin-table-wrapper">
+
+                        {/* Toolbar: search + star filter */}
+                        <div className="reviews-toolbar">
+                            <input
+                                type="text"
+                                className="reviews-search"
+                                placeholder="Search by reviewer, product, or comment…"
+                                value={reviewSearch}
+                                onChange={e => setReviewSearch(e.target.value)}
+                            />
+                            <div className="reviews-filter-stars">
+                                {["all", "5", "4", "3", "2", "1"].map(val => (
+                                    <button
+                                        key={val}
+                                        className={`reviews-filter-btn ${reviewRatingFilter === val ? "active" : ""}`}
+                                        onClick={() => setReviewRatingFilter(val)}
+                                    >
+                                        {val === "all" ? "All" : `${val} ★`}
+                                    </button>
+                                ))}
+                            </div>
+                            <span className="reviews-count-label">
+                                {filteredReviews.length} review{filteredReviews.length !== 1 ? "s" : ""}
+                            </span>
+                        </div>
+
+                        {reviewsLoading ? (
+                            <p style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                Loading reviews…
+                            </p>
+                        ) : filteredReviews.length === 0 ? (
+                            <p style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                No reviews found.
+                            </p>
+                        ) : (
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Reviewer</th>
+                                        <th>Rating</th>
+                                        <th>Comment</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredReviews.map(review => (
+                                        <tr key={review._id}>
+
+                                            {/* Product */}
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    {review.productId?.imageUrl
+                                                        ? <img src={review.productId.imageUrl} alt={review.productId.name} style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                                                        : <div style={{ width: '38px', height: '38px', background: 'var(--bg-subtle)', borderRadius: '8px', flexShrink: 0 }} />
+                                                    }
+                                                    <span style={{ fontWeight: 500, fontSize: '13px' }}>
+                                                        {review.productId?.name || "Deleted product"}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            {/* Reviewer */}
+                                            <td>
+                                                <p style={{ fontWeight: 500, margin: 0, fontSize: '13px' }}>{review.userName}</p>
+                                                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{review.userEmail}</p>
+                                            </td>
+
+                                            {/* Rating */}
+                                            <td>
+                                                <StarDisplay rating={review.rating} />
+                                            </td>
+
+                                            {/* Comment */}
+                                            <td style={{ maxWidth: '260px' }}>
+                                                {review.comment
+                                                    ? <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                        {review.comment}
+                                                    </p>
+                                                    : <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>No comment</span>
+                                                }
+                                            </td>
+
+                                            {/* Date */}
+                                            <td style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                                {new Date(review.createdAt).toLocaleDateString('en-NP', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                            </td>
+
+                                            {/* Delete */}
+                                            <td className="action-cell">
+                                                <button className="icon-btn delete" onClick={() => deleteReview(review._id)} title="Delete review">
+                                                    <FiTrash2 />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                )}
+
+                {/* ── REPORTS ───────────────────────────────────────────────── */}
                 {activeTab === "reports" && (
                     <div className="reports-page">
-
-                        {/* Report Type Cards */}
                         <div className="report-type-grid">
                             {reportTypes.map(rt => (
                                 <div
@@ -790,7 +873,6 @@ export default function AdminDashboard() {
                             ))}
                         </div>
 
-                        {/* Filters */}
                         <div className="report-filters-card">
                             <h3 className="report-section-title">Filters</h3>
                             <div className="report-filters-row">
@@ -808,66 +890,49 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        {/* Preview Table */}
                         {reportGenerated && (
-                            <>
-                                <div className="report-preview-card">
-                                    <div className="report-preview-header">
-                                        <h3 className="report-section-title" style={{ margin: 0 }}>
-                                            Preview — {reportTypes.find(r => r.value === reportType)?.label}
-                                            <span style={{ fontWeight: 400, fontSize: '13px', color: 'var(--text-muted)', marginLeft: '10px' }}>
-                                                {reportData.length} row{reportData.length !== 1 ? "s" : ""}
-                                            </span>
-                                        </h3>
-                                        <div className="report-download-btns">
-                                            <button className="btn-download csv" onClick={downloadCSV}>
-                                                ↓ Download CSV
-                                            </button>
-                                            <button className="btn-download excel" onClick={downloadExcel}>
-                                                ↓ Download Excel
-                                            </button>
-                                        </div>
+                            <div className="report-preview-card">
+                                <div className="report-preview-header">
+                                    <h3 className="report-section-title" style={{ margin: 0 }}>
+                                        Preview — {reportTypes.find(r => r.value === reportType)?.label}
+                                        <span style={{ fontWeight: 400, fontSize: '13px', color: 'var(--text-muted)', marginLeft: '10px' }}>
+                                            {reportData.length} row{reportData.length !== 1 ? "s" : ""}
+                                        </span>
+                                    </h3>
+                                    <div className="report-download-btns">
+                                        <button className="btn-download csv" onClick={downloadCSV}>↓ Download CSV</button>
+                                        <button className="btn-download excel" onClick={downloadExcel}>↓ Download Excel</button>
                                     </div>
-
-                                    {reportData.length === 0 ? (
-                                        <p style={{ color: 'var(--text-muted)', padding: '24px 0', fontSize: '14px' }}>
-                                            No data found for the selected filters.
-                                        </p>
-                                    ) : (
-                                        <div className="report-table-wrapper">
-                                            <table className="admin-table report-table">
-                                                <thead>
-                                                    <tr>
-                                                        {Object.keys(reportData[0]).map(col => (
-                                                            <th key={col}>{col}</th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {reportData.slice(0, 50).map((row, i) => (
-                                                        <tr key={i}>
-                                                            {Object.values(row).map((val, j) => (
-                                                                <td key={j}>{String(val)}</td>
-                                                            ))}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                            {reportData.length > 50 && (
-                                                <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>
-                                                    Showing first 50 rows. Download for full data.
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
-                            </>
+
+                                {reportData.length === 0 ? (
+                                    <p style={{ color: 'var(--text-muted)', padding: '24px 0', fontSize: '14px' }}>No data found for the selected filters.</p>
+                                ) : (
+                                    <div className="report-table-wrapper">
+                                        <table className="admin-table report-table">
+                                            <thead>
+                                                <tr>{Object.keys(reportData[0]).map(col => <th key={col}>{col}</th>)}</tr>
+                                            </thead>
+                                            <tbody>
+                                                {reportData.slice(0, 50).map((row, i) => (
+                                                    <tr key={i}>{Object.values(row).map((val, j) => <td key={j}>{String(val)}</td>)}</tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {reportData.length > 50 && (
+                                            <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>
+                                                Showing first 50 rows. Download for full data.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 )}
             </main>
 
-            {/* PRODUCT MODAL */}
+            {/* ── PRODUCT MODAL ─────────────────────────────────────────────── */}
             {showProductModal && (
                 <div className="modal-overlay">
                     <div className="modal">
