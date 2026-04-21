@@ -80,8 +80,8 @@ const changePassword = async (req, res) => {
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) return res.status(403).json({ success: false, message: 'Current password is incorrect' });
 
-        user.password = await bcrypt.hash(newPassword, 10);
-        await user.save();
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await UserModel.findOneAndUpdate({ email: userEmail }, { password: hashed });
 
         res.json({ success: true, message: 'Password changed successfully' });
     } catch (err) {
@@ -99,9 +99,7 @@ const deleteAccount = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(403).json({ success: false, message: 'Incorrect password' });
 
-        user.isDeleted = true;
-        user.deletedAt = new Date();
-        await user.save();
+        await UserModel.findOneAndUpdate({ email: userEmail }, { isDeleted: true, deletedAt: new Date() });
 
         res.json({ success: true, message: 'Account scheduled for deletion' });
     } catch (err) {

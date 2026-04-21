@@ -762,6 +762,8 @@ export default function Profile() {
                                                 {passwordErrors.confirmPassword && <p className="field-error">{passwordErrors.confirmPassword}</p>}
                                             </div>
                                         </div>
+                                        {passwordErrors.general && <p className="field-error">{passwordErrors.general}</p>}
+                                        <button className="btn-profile-save" onClick={handleChangePassword} style={{ marginTop: '12px' }}>Update password</button>
                                     </div>
                                     <div className="settings-block danger-block">
                                         <h3>Delete account</h3>

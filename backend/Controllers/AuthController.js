@@ -149,9 +149,7 @@ const restoreAccount = async (req, res) => {
         const isPassEqual = await bcrypt.compare(password, user.password);
         if (!isPassEqual) return res.status(403).json({ success: false, message: "Incorrect password" });
 
-        user.isDeleted = false;
-        user.deletedAt = null;
-        await user.save();
+        await UserModel.findOneAndUpdate({ email }, { isDeleted: false, deletedAt: null });
 
         const jwtToken = jwt.sign(
             { email: user.email, _id: user._id, role: user.role },
