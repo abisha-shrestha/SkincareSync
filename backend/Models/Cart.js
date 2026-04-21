@@ -7,7 +7,7 @@ const cartItemSchema = new mongoose.Schema({
 });
 
 const cartSchema = new mongoose.Schema({
-    userId: String,  // email for now
+    userId: String,  
     items: [cartItemSchema]
 });
 

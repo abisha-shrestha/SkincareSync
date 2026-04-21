@@ -1,6 +1,5 @@
 const multer = require('multer');
 
-// Store in memory, not disk — we'll stream directly to Cloudinary
 const storage = multer.memoryStorage();
 
 const upload = multer({
