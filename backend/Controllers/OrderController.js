@@ -24,27 +24,28 @@ const calculateShipping = (subtotal, city) => {
 
 const sendOrderConfirmation = async (userEmail, order) => {
     const itemRows = order.items.map(item =>
-        `${item.name} x${item.quantity} — Rs. ${(item.price * item.quantity).toLocaleString()}`
+        `${item.name} x${item.quantity} - Rs. ${(item.price * item.quantity).toLocaleString()}`
     ).join('\n');
 
     await transporter.sendMail({
         from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
         to: userEmail,
-        subject: `Order Confirmed — #${order._id.toString().slice(-8).toUpperCase()}`,
+        subject: `Order Confirmed - #${order._id.toString().slice(-8).toUpperCase()}`,
         text: `Hi there,
 
-Thank you for your order!
+Thank you for your order! Here's your summary:
 
 Order ID: #${order._id.toString().slice(-8).toUpperCase()}
 
 ${itemRows}
+Shipping charge - Rs. ${order.shipping}
 
-Subtotal: Rs. ${order.subtotal.toLocaleString()}
-Shipping: Rs. ${order.shipping}
 Total: Rs. ${order.totalAmount.toLocaleString()}
 
-Payment: Cash on Delivery
+Payment: ${order.paymentMethod}
 Delivery to: ${order.deliveryAddress.address}, ${order.deliveryAddress.city}
+
+We'll notify you once your order is on its way.
 
 - SkincareSync`
     });
@@ -54,7 +55,7 @@ const sendShippedEmail = async (userEmail, order) => {
     await transporter.sendMail({
         from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
         to: userEmail,
-        subject: `Your order is on its way — #${order._id.toString().slice(-8).toUpperCase()}`,
+        subject: `Your order is on its way - #${order._id.toString().slice(-8).toUpperCase()}`,
         text: `Hi there,
 
 Your order is on its way.
@@ -70,15 +71,27 @@ Delivery: ${order.deliveryAddress.address}, ${order.deliveryAddress.city}
 const sendDeliveredEmail = async (userEmail, order) => {
     const orderId = order._id.toString().slice(-8).toUpperCase();
 
+    const reviewLinks = order.items.map(item =>
+        `${item.name}: ${process.env.FRONTEND_URL}/review?productId=${item.productId}&orderId=${order._id}`
+    ).join('\n');
+
     await transporter.sendMail({
         from: `"SkincareSync" <${process.env.GMAIL_USER}>`,
         to: userEmail,
-        subject: `Delivered — #${orderId}`,
-        text: `Hi,
+        subject: `Delivered - #${orderId}`,
+        text: `Hi there,
 
 Your order has been delivered.
 
 Order ID: #${orderId}
+
+We hope you're satisfied with your purchase. If you have a moment, share your feedback:
+
+${reviewLinks}
+
+If there's any issue with your order, feel free to contact us at ${process.env.GMAIL_USER}.
+
+Thank you for shopping with us.
 
 - SkincareSync`
     });
