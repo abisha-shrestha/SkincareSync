@@ -29,7 +29,7 @@ export default function EsewaSuccess() {
                     navigate("/order-success", { state: { orderedItems: result.order.items } });
                 } else {
                     toast.error(result.message || "Payment verification failed");
-                    navigate("/checkout"); // back to checkout, cart intact
+                    navigate("/checkout"); // back to checkout
                 }
             })
             .catch(() => navigate("/checkout"));

@@ -273,7 +273,7 @@ const generateEsewaSignature = (totalAmount, transactionUuid) => {
         .digest('base64');
 };
 
-// New: initiate eSewa payment (returns signature + fields to frontend)
+// Initiate eSewa payment 
 const initiateEsewaPayment = async (req, res) => {
     try {
         const { userEmail, deliveryAddress, items, isBuyNow } = req.body;
@@ -322,7 +322,7 @@ const initiateEsewaPayment = async (req, res) => {
     }
 };
 
-// New: verify eSewa payment after redirect
+// Verify eSewa payment after redirect
 const verifyEsewaPayment = async (req, res) => {
     try {
         const { data } = req.query;

@@ -127,7 +127,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         </div>
     );
 
-    // Home page — simple grid, no filters
+    // Home page - simple grid, no filters
     if (limit) {
         return (
             <div className="products-grid">

@@ -25,7 +25,7 @@ export default function AdminDashboard() {
         name: "", brand: "", price: "", category: "", description: "", skinTypes: "", imageUrl: ""
     });
 
-    // ── Reviews state ──────────────────────────────────────────────────────────
+    // Reviews state 
     const [reviews, setReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(false);
     const [reviewSearch, setReviewSearch] = useState("");
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
         toast.success(editingProduct ? "Product updated" : "Product added");
     };
 
-    // ── Reports ────────────────────────────────────────────────────────────────
+    // Reports 
     const generateReport = async () => {
         setGeneratingReport(true);
         setReportGenerated(false);
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="analytics-card">
-                            <h2 className="analytics-title">Revenue & Orders — Last 7 Days</h2>
+                            <h2 className="analytics-title">Revenue & Orders - Last 7 Days</h2>
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={analytics} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -751,7 +751,7 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* ── REVIEWS ───────────────────────────────────────────────── */}
+                {/* REVIEWS */}
                 {activeTab === "reviews" && (
                     <div className="admin-table-wrapper">
 
@@ -857,7 +857,7 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* ── REPORTS ───────────────────────────────────────────────── */}
+                {/* REPORTS */}
                 {activeTab === "reports" && (
                     <div className="reports-page">
                         <div className="report-type-grid">
@@ -932,7 +932,7 @@ export default function AdminDashboard() {
                 )}
             </main>
 
-            {/* ── PRODUCT MODAL ─────────────────────────────────────────────── */}
+            {/* PRODUCT MODAL */}
             {showProductModal && (
                 <div className="modal-overlay">
                     <div className="modal">

@@ -37,10 +37,10 @@ const addToCart = async (req, res) => {
         // UPDATE ITEM
         else if (existingItemIndex > -1) {
             if (addToExisting) {
-                // From "Add to Cart" button — accumulate on top of existing
+                // From "Add to Cart" button - accumulate on top of existing
                 cart.items[existingItemIndex].quantity += quantity;
             } else {
-                // From cart +/- buttons — set the exact value
+                // From cart +/- buttons - set the exact value
                 cart.items[existingItemIndex].quantity = quantity;
             }
         }

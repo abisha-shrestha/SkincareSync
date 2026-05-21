@@ -378,7 +378,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
         );
     }
 
-    // MAIN AUTH FORM
+    // Main Auth Form
     return (
         <section className="auth-page">
             <div className="auth-container">

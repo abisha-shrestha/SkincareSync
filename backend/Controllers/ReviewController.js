@@ -87,7 +87,7 @@ const deleteReview = async (req, res) => {
 
 // Admin-only 
 
-// GET /api/admin/reviews  — all reviews across all products
+// GET /api/admin/reviews  - all reviews across all products
 const getAllReviews = async (req, res) => {
     try {
         const reviews = await Review.find({})
@@ -100,7 +100,7 @@ const getAllReviews = async (req, res) => {
     }
 };
 
-// DELETE /api/admin/reviews/:reviewId  — delete any review by its _id
+// DELETE /api/admin/reviews/:reviewId  - delete any review by its _id
 const adminDeleteReview = async (req, res) => {
     try {
         const { reviewId } = req.params;
