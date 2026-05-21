@@ -194,9 +194,18 @@
 }
 
 .action-cell {
+    white-space: nowrap;
+}
+
+.action-cell-inner {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+.order-row td:nth-child(5),   
+.order-row td:nth-child(9) {  
+    white-space: nowrap;
 }
 
 .icon-btn {

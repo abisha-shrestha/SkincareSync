@@ -562,7 +562,7 @@ export default function AdminDashboard() {
                                                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{order.userEmail}</p>
                                                 </td>
                                                 <td>
-                                                    <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
+                                                    <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block' }}>
                                                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                                                     </span>
                                                 </td>
@@ -626,7 +626,7 @@ export default function AdminDashboard() {
                                                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{order.userEmail}</p>
                                                 </td>
                                                 <td>
-                                                    <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
+                                                    <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap',display: 'inline-block' }}>
                                                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                                                     </span>
                                                 </td>
@@ -654,6 +654,12 @@ export default function AdminDashboard() {
                                                 <td className="action-cell">
                                                     <button className="icon-btn delete" onClick={() => deleteOrder(order._id)}><FiTrash2 /></button>
                                                 </td>
+
+                                                {/* <td className="action-cell">
+                                                    <div className="action-cell-inner">
+                                                        <button className="icon-btn delete"><FiTrash2 /></button>
+                                                    </div>
+                                                </td> */}
                                             </tr>
                                             {expandedOrder === order._id && (
                                                 <tr key={`${order._id}-expanded`} className="order-items-row">
