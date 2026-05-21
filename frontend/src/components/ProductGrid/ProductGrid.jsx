@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiStar, FiChevronDown, FiChevronUp, FiSliders, FiX } from "react-icons/fi";
 import "./ProductGrid.css";
 
-const CATEGORIES = ["All", "Cleanser", "Toner", "Moisturizer", "Sunscreen", "Serum", "Hydration", "Repair"];
+const CATEGORIES = ["All", "Cleanser", "Toner", "Moisturizer", "Sunscreen"];
 const SKIN_TYPES = ["All", "Oily", "Dry", "Combination", "Normal", "Sensitive"];
 const SORT_OPTIONS = [
     { value: "default", label: "Default" },
@@ -12,6 +12,8 @@ const SORT_OPTIONS = [
     { value: "rating_desc", label: "Top Rated" },
     { value: "name_asc", label: "Name: A to Z" },
 ];
+
+const PRODUCTS_PER_PAGE = 12;
 
 function StarDisplay({ rating }) {
     if (!rating || rating === 0) return null;
@@ -48,6 +50,8 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
     const [maxPrice, setMaxPrice] = useState(50000);
     const [brandOpen, setBrandOpen] = useState(false);
 
+    const [currentPage, setCurrentPage] = useState(1);
+
     useEffect(() => {
         fetch('http://localhost:3000/api/products')
             .then(res => res.json())
@@ -62,6 +66,10 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
             })
             .catch(err => { console.error('Error:', err); setLoading(false); });
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeCategory, activeSkinType, activeBrand, priceRange, minRating, sortBy, skinTypeFilter]);
 
     const allBrands = useMemo(() => {
         return [...new Set(allProducts.map(p => p.brand?.trim()).filter(Boolean))].sort();
@@ -120,6 +128,13 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
 
         return limit ? result.slice(0, limit) : result;
     }, [allProducts, skinTypeFilter, activeCategory, activeSkinType, activeBrand, priceRange, minRating, sortBy, limit]);
+
+
+    const totalPages = Math.ceil(displayedProducts.length / PRODUCTS_PER_PAGE);
+    const paginatedProducts = displayedProducts.slice(
+        (currentPage - 1) * PRODUCTS_PER_PAGE,
+        currentPage * PRODUCTS_PER_PAGE
+    );
 
     if (loading) return (
         <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -336,7 +351,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
 
             </aside>
 
-            {/* ── PRODUCTS AREA ── */}
+            {/*  PRODUCTS AREA  */}
             <div className="products-main">
 
                 <div className="products-topbar">
@@ -352,6 +367,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                     </button>
                     <p className="products-result-count">
                         {displayedProducts.length} product{displayedProducts.length !== 1 ? "s" : ""}
+                        {totalPages > 1 && ` · Page ${currentPage} of ${totalPages}`}
                         {activeFilterCount > 0 ? " found" : ""}
                     </p>
                 </div>
@@ -365,7 +381,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                     </div>
                 ) : (
                     <div className="products-grid">
-                        {displayedProducts.map(product => (
+                        {paginatedProducts.map(product => (
                             <div
                                 key={product._id}
                                 className="product-card"
@@ -391,7 +407,57 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                             </div>
                         ))}
                     </div>
+
                 )}
+                                    {totalPages > 1 && (
+                        <div className="pagination">
+                            <button
+                                className="pagination-btn"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                ← Prev
+                            </button>
+
+                            <div className="pagination-pages">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    .filter(page =>
+                                        page === 1 ||
+                                        page === totalPages ||
+                                        Math.abs(page - currentPage) <= 1
+                                    )
+                                    .reduce((acc, page, idx, arr) => {
+                                        if (idx > 0 && page - arr[idx - 1] > 1) {
+                                            acc.push('...');
+                                        }
+                                        acc.push(page);
+                                        return acc;
+                                    }, [])
+                                    .map((item, idx) =>
+                                        item === '...' ? (
+                                            <span key={`ellipsis-${idx}`} className="pagination-ellipsis">…</span>
+                                        ) : (
+                                            <button
+                                                key={item}
+                                                className={`pagination-page ${currentPage === item ? 'active' : ''}`}
+                                                onClick={() => setCurrentPage(item)}
+                                            >
+                                                {item}
+                                            </button>
+                                        )
+                                    )
+                                }
+                            </div>
+
+                            <button
+                                className="pagination-btn"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    )}
             </div>
         </div>
     );

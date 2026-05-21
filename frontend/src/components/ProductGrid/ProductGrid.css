@@ -558,6 +558,64 @@
     letter-spacing: 0.3px;
 }
 
+
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 40px;
+    padding-bottom: 20px;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-btn,
+.pagination-page {
+    height: 36px;
+    min-width: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-page:hover:not(.active) {
+    background: var(--hover-bg, #f5f5f5);
+    border-color: var(--accent);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pagination-page.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+
+.pagination-ellipsis {
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 0 4px;
+    user-select: none;
+}
+
+
+
 /*  RESPONSIVE  */
 
 @keyframes fadeSlide {
