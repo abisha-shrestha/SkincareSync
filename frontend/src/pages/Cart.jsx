@@ -98,6 +98,11 @@ export default function Cart() {
     };
 
     const handleProceedToCheckout = () => {
+        if (!localStorage.getItem('token')) {
+            sessionStorage.setItem('redirectAfter', '/checkout');
+            navigate('/auth');
+            return;
+        }
         const selectedItems = cartItems.filter(item => item.selected);
         navigate("/checkout", { state: { selectedItems } });
     };

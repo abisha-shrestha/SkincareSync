@@ -324,7 +324,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                     <p className="filter-section-title">
                         Price Range
                         <span className="filter-range-label">
-                            Rs. {priceRange[0].toLocaleString()} — Rs. {priceRange[1].toLocaleString()}
+                            Rs. {priceRange[0].toLocaleString()} - Rs. {priceRange[1].toLocaleString()}
                         </span>
                     </p>
                     <div className="filter-price-inputs">
@@ -343,7 +343,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                                 }}
                             />
                         </div>
-                        <span className="filter-price-sep">—</span>
+                        <span className="filter-price-sep">-</span>
                         <div className="filter-price-input-wrap">
                             <span className="filter-price-prefix">Rs.</span>
                             <input

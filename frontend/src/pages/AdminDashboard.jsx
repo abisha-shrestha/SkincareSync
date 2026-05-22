@@ -336,8 +336,8 @@ export default function AdminDashboard() {
                 });
                 rows = allProducts.map(p => ({
                     "Product": p.name,
-                    "Brand": p.brand || "—",
-                    "Category": p.category || "—",
+                    "Brand": p.brand || "-",
+                    "Category": p.category || "-",
                     "Price (Rs.)": p.price,
                     "Units Sold": salesMap[p.name]?.qty || 0,
                     "Revenue (Rs.)": salesMap[p.name]?.revenue || 0,
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
                 rows = allUsers.map(u => ({
                     "Name": u.name,
                     "Email": u.email,
-                    "Skin Type": u.skinType || "—",
+                    "Skin Type": u.skinType || "-",
                     "Total Orders": orderMap[u.email]?.count || 0,
                     "Total Spent (Rs.)": orderMap[u.email]?.spent || 0,
                 }));
@@ -721,8 +721,8 @@ export default function AdminDashboard() {
                                             }
                                         </td>
                                         <td style={{ fontWeight: 500 }}>{p.name}</td>
-                                        <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{p.brand || "—"}</td>
-                                        <td>{p.category || "—"}</td>
+                                        <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{p.brand || "-"}</td>
+                                        <td>{p.category || "-"}</td>
                                         <td>Rs. {p.price?.toLocaleString()}</td>
                                         <td className="action-cell">
                                             <button className="icon-btn edit" onClick={() => openEditProduct(p)}><FiEdit2 /></button>
@@ -900,7 +900,7 @@ export default function AdminDashboard() {
                             <div className="report-preview-card">
                                 <div className="report-preview-header">
                                     <h3 className="report-section-title" style={{ margin: 0 }}>
-                                        Preview — {reportTypes.find(r => r.value === reportType)?.label}
+                                        Preview - {reportTypes.find(r => r.value === reportType)?.label}
                                         <span style={{ fontWeight: 400, fontSize: '13px', color: 'var(--text-muted)', marginLeft: '10px' }}>
                                             {reportData.length} row{reportData.length !== 1 ? "s" : ""}
                                         </span>

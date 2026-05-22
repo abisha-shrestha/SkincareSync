@@ -100,11 +100,17 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                         body: JSON.stringify({ userEmail: result.email, skinType: sessionSkinType })
                     }).then(() => sessionStorage.removeItem('skinType'));
                 }
-                window.location.href = result.role === 'admin' ? '/admin' : '/';
-            } else {
-                const signedUpEmail = formData.email;
-                toggleAuth();
-                setFormData(prev => ({ ...prev, email: signedUpEmail }));
+                if (result.role === 'admin') {
+                    window.location.href = '/admin';
+                    return;
+                }
+                const redirectTo = sessionStorage.getItem('redirectAfter');
+                if (redirectTo) {
+                    sessionStorage.removeItem('redirectAfter');
+                    window.location.href = redirectTo;
+                } else {
+                    window.location.href = '/';
+                }
             }
         } catch (err) {
             setServerError("Unable to connect. Please check your connection and try again.");
@@ -124,15 +130,23 @@ export default function AuthForm({ isLogin, toggleAuth }) {
         });
         const data = await res.json();
         if (data.success) {
-            localStorage.setItem("token", data.jwtToken);
-            localStorage.setItem("name", data.name);
-            localStorage.setItem("email", data.email);
-            localStorage.setItem("role", data.role);
-            window.location.href = data.role === 'admin' ? '/admin' : '/';
-        } else {
-            setServerError(data.message);
-            setShowRestorePrompt(false);
+        localStorage.setItem("token", data.jwtToken);
+        localStorage.setItem("name", data.name);
+        localStorage.setItem("email", data.email);
+        localStorage.setItem("role", data.role);
+        
+        if (data.role === 'admin') {
+            window.location.href = '/admin';
+            return;
         }
+        const redirectTo = sessionStorage.getItem('redirectAfter');
+        if (redirectTo) {
+            sessionStorage.removeItem('redirectAfter');
+            window.location.href = redirectTo;
+        } else {
+            window.location.href = '/';
+        }
+    }
     } catch {
         setServerError("Something went wrong.");
         setShowRestorePrompt(false);

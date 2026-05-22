@@ -224,13 +224,33 @@ export default function ProductDetail() {
     };
 
     const buyNow = () => {
+        if (!localStorage.getItem('token')) {
+            sessionStorage.setItem('redirectAfter', '/checkout?mode=buynow');
+            // Store the item so checkout works after redirect-back
+            const buyNowItem = {
+                productId: {
+                    _id: product._id,
+                    name: product.name,
+                    imageUrl: product.imageUrl || product.image || null,
+                    category: product.category || null,
+                    brand: product.brand || null,
+                },
+                name: product.name,
+                price: product.price,
+                quantity: quantity,
+                isBuyNow: true,
+            };
+            sessionStorage.setItem("buyNowItem", JSON.stringify(buyNowItem));
+            navigate('/auth');
+            return;
+        }
         const buyNowItem = {
             productId: {
                 _id: product._id,
                 name: product.name,
                 imageUrl: product.imageUrl || product.image || null,
-                category: product.category || null,   
-                brand: product.brand || null,          
+                category: product.category || null,
+                brand: product.brand || null,
             },
             name: product.name,
             price: product.price,
