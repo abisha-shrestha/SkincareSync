@@ -401,5 +401,75 @@ const verifyEsewaPayment = async (req, res) => {
 };
 
 
-module.exports = { placeOrder, getUserOrders, getAllOrders, updateOrderStatus, deleteOrder, cancelOrder, initiateEsewaPayment, verifyEsewaPayment };
+const demoPayment = async (req, res) => {
+
+    if (process.env.NODE_ENV === "production") {
+        return res.status(403).json({
+            success: false,
+            message: "Demo payment is not available in production"
+        });
+    }
+
+    try {
+        const { outcome, userEmail, deliveryAddress, items, isBuyNow } = req.body;
+
+        if (!["success", "failure"].includes(outcome)) {
+            return res.status(400).json({ success: false, message: "Invalid outcome" });
+        }
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ success: false, message: "No items provided" });
+        }
+
+        const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const shipping = calculateShipping(subtotal, deliveryAddress?.city);
+        const totalAmount = subtotal + shipping;
+
+        if (outcome === "failure") {
+            return res.json({
+                success: true,
+                outcome: "failure",
+                message: "Demo payment failed"
+            });
+        }
+
+        const order = new Order({
+            userEmail,
+            items,
+            deliveryAddress,
+            subtotal,
+            shipping,
+            totalAmount,
+            paymentMethod: "eSewa",
+            paymentStatus: "Paid",
+            status: "Processing",
+            esewaTransactionUuid: `DEMO-${Date.now()}`
+        });
+
+        await order.save();
+
+        if (!isBuyNow) {
+            const cart = await Cart.findOne({ userId: userEmail });
+            if (cart) {
+                const orderedIds = items.map(i =>
+                    (i.productId?._id || i.productId).toString()
+                );
+                cart.items = cart.items.filter(
+                    item => !orderedIds.includes(item.productId.toString())
+                );
+                await cart.save();
+            }
+        }
+
+        sendOrderConfirmation(userEmail, order).catch(console.error);
+
+        return res.json({ success: true, outcome: "success", order });
+
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+
+module.exports = { placeOrder, getUserOrders, getAllOrders, updateOrderStatus, deleteOrder, cancelOrder, initiateEsewaPayment, verifyEsewaPayment, demoPayment };
 

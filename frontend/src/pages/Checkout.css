@@ -354,3 +354,55 @@
 .checkout-submit-esewa:hover:not(:disabled) {
     background: #52a33c;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+.payment-option--demo.selected {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.07);
+}
+
+.demo-option-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.demo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: rgba(245, 158, 11, 0.15);
+    font-size: 13px;
+    flex-shrink: 0;
+    border: 1px solid rgba(245, 158, 11, 0.30);
+}
+
+.demo-option-hint {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 1px;
+}
+
+.checkout-submit-demo {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+}
+
+.checkout-submit-demo:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}

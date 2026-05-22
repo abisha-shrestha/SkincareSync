@@ -5,6 +5,12 @@ import Footer from "../components/Footer/Footer";
 import toast from "react-hot-toast";
 import "./Checkout.css";
 
+const IS_DEMO = process.env.REACT_APP_DEMO_MODE === "true";
+let DemoPaymentModal = null;
+if (IS_DEMO) {
+    DemoPaymentModal = require("../components/DemoPaymentModal/DemoPaymentModal").default;
+}
+
 export default function Checkout() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -12,14 +18,14 @@ export default function Checkout() {
 
     const isBuyNow = new URLSearchParams(location.search).get("mode") === "buynow";
 
-    const [cartItems, setCartItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [placing, setPlacing] = useState(false);
+    const [cartItems, setCartItems]           = useState([]);
+    const [loading, setLoading]               = useState(true);
+    const [placing, setPlacing]               = useState(false);
     const [savedAddresses, setSavedAddresses] = useState([]);
-    const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "" });
-    const [errors, setErrors] = useState({});
-
-    const [paymentMethod, setPaymentMethod] = useState("cod"); // "cod" | "esewa"
+    const [form, setForm]                     = useState({ fullName: "", phone: "", address: "", city: "" });
+    const [errors, setErrors]                 = useState({});
+    const [paymentMethod, setPaymentMethod]   = useState("cod");
+    const [showDemoModal, setShowDemoModal]   = useState(false);
 
     useEffect(() => {
         if (isBuyNow) {
@@ -29,7 +35,6 @@ export default function Checkout() {
             setLoading(false);
         } else {
             const selectedItems = location.state?.selectedItems;
-
             if (selectedItems && selectedItems.length > 0) {
                 setCartItems(selectedItems);
                 setLoading(false);
@@ -53,28 +58,23 @@ export default function Checkout() {
             .then(data => {
                 const addresses = data.addresses || [];
                 setSavedAddresses(addresses);
-
                 const defaultAddr = addresses.find(a => a.isDefault);
                 if (defaultAddr) {
                     setForm({
                         fullName: defaultAddr.fullName,
-                        phone: defaultAddr.phone,
-                        address: defaultAddr.address,
-                        city: defaultAddr.city
+                        phone:    defaultAddr.phone,
+                        address:  defaultAddr.address,
+                        city:     defaultAddr.city
                     });
                 }
             })
             .catch(err => console.error(err));
     }, []);
 
-    const total = cartItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-    );
+    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     const validate = () => {
         const newErrors = {};
-
         if (!form.fullName.trim()) newErrors.fullName = "Full name is required";
         else if (form.fullName.trim().length < 3)
             newErrors.fullName = "Full name must be at least 3 characters";
@@ -96,28 +96,28 @@ export default function Checkout() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         if (name === "phone") {
             const digits = value.replace(/\D/g, "").slice(0, 10);
             setForm(prev => ({ ...prev, phone: digits }));
         } else {
             setForm(prev => ({ ...prev, [name]: value }));
         }
-
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: "" }));
-        }
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
     };
 
     const handleSelectAddress = (addr) => {
-        setForm({
-            fullName: addr.fullName,
-            phone: addr.phone,
-            address: addr.address,
-            city: addr.city
-        });
+        setForm({ fullName: addr.fullName, phone: addr.phone, address: addr.address, city: addr.city });
         setErrors({});
     };
+
+    const buildItemsPayload = () =>
+        cartItems.map(item => ({
+            productId: item.productId?._id || item.productId,
+            name:      item.productId?.name  || item.name,
+            price:     item.price,
+            quantity:  item.quantity,
+            imageUrl:  item.productId?.imageUrl || item.imageUrl || ""
+        }));
 
     const handlePlaceOrder = async () => {
         const validationErrors = validate();
@@ -127,13 +127,12 @@ export default function Checkout() {
             return;
         }
 
-        const itemsPayload = cartItems.map(item => ({
-            productId: item.productId?._id || item.productId,
-            name: item.productId?.name || item.name,
-            price: item.price,
-            quantity: item.quantity,
-            imageUrl: item.productId?.imageUrl || item.imageUrl || ""
-        }));
+        if (paymentMethod === "demo") {
+            setShowDemoModal(true);
+            return;
+        }
+
+        const itemsPayload = buildItemsPayload();
 
         try {
             setPlacing(true);
@@ -152,7 +151,6 @@ export default function Checkout() {
                     toast.error(data.message || "Order failed");
                 }
             } else {
-                // eSewa flow
                 const res = await fetch("http://localhost:3000/api/orders/esewa/initiate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -161,23 +159,19 @@ export default function Checkout() {
                 const data = await res.json();
                 if (!data.success) { toast.error(data.message); return; }
 
-                // Store orderId for after redirect
                 sessionStorage.setItem("pendingOrderId", data.orderId);
 
-                // Build and submit form to eSewa
                 const p = data.esewaPayload;
                 const form_el = document.createElement("form");
                 form_el.method = "POST";
                 form_el.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
-
                 Object.entries(p).forEach(([key, val]) => {
                     const input = document.createElement("input");
-                    input.type = "hidden";
-                    input.name = key;
+                    input.type  = "hidden";
+                    input.name  = key;
                     input.value = val;
                     form_el.appendChild(input);
                 });
-
                 document.body.appendChild(form_el);
                 form_el.submit();
             }
@@ -187,6 +181,53 @@ export default function Checkout() {
             setPlacing(false);
         }
     };
+
+    const handleDemoOutcome = async (outcome) => {
+        setShowDemoModal(false);
+        const itemsPayload = buildItemsPayload();
+
+        try {
+            setPlacing(true);
+            const res = await fetch("http://localhost:3000/api/orders/demo-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    outcome,
+                    userEmail,
+                    deliveryAddress: form,
+                    items: itemsPayload,
+                    isBuyNow
+                })
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                toast.error(data.message || "Demo request failed");
+                return;
+            }
+
+            if (outcome === "success") {
+                if (isBuyNow) sessionStorage.removeItem("buyNowItem");
+                toast.success("Demo: Payment successful!");
+                navigate("/order-success", { state: { orderedItems: cartItems } });
+            } else {
+                toast.error("Demo: Payment failed.");
+                navigate("/esewa-failure");
+            }
+        } catch (err) {
+            toast.error("Demo request error");
+        } finally {
+            setPlacing(false);
+        }
+    };
+
+    const getShippingCost = () => {
+        if (total > 4500) return 0;
+        const city = form.city.trim().toLowerCase();
+        return city === "pokhara" ? 150 : 220;
+    };
+    const shipping   = getShippingCost();
+    const grandTotal = total + shipping;
 
     if (loading) {
         return (
@@ -200,16 +241,20 @@ export default function Checkout() {
         );
     }
 
-    // UI Shipping, for display puropse only
-    const getShippingCost = () => {
-        if (total > 4500) return 0;
-        const city = form.city.trim().toLowerCase();
-        if (city === "pokhara") return 150;
-        return 220;
-    };
+    const btnLabel = placing
+        ? "Processing..."
+        : paymentMethod === "esewa"
+            ? "Pay with eSewa"
+            : paymentMethod === "demo"
+                ? "Demo Payment"
+                : "Place Order";
 
-    const shipping = getShippingCost();
-    const grandTotal = total + shipping;
+    const btnClass = [
+        "checkout-submit-btn",
+        paymentMethod === "esewa" ? "checkout-submit-esewa" :
+        paymentMethod === "demo"  ? "checkout-submit-demo"  :
+                                    "checkout-submit-cod"
+    ].join(" ");
 
     return (
         <>
@@ -217,14 +262,12 @@ export default function Checkout() {
 
             <section className="checkout-page">
                 <div className="checkout-wrapper">
-
                     <h1 className="checkout-title">
                         {isBuyNow ? "Quick Checkout" : "Checkout"}
                     </h1>
 
                     <div className="checkout-container">
 
-                        {/* LEFT */}
                         <div className="checkout-left">
 
                             {savedAddresses.length > 0 && (
@@ -254,33 +297,31 @@ export default function Checkout() {
                             <div className="checkout-section">
                                 <h2>Delivery Details</h2>
                                 <div className="checkout-form">
-                                    <div className="checkout-field">
-                                        <label>Full Name *</label>
-                                        <input name="fullName" value={form.fullName} onChange={handleChange} />
-                                        {errors.fullName && <p className="checkout-error">{errors.fullName}</p>}
-                                    </div>
-                                    <div className="checkout-field">
-                                        <label>Phone *</label>
-                                        <input name="phone" value={form.phone} onChange={handleChange} />
-                                        {errors.phone && <p className="checkout-error">{errors.phone}</p>}
-                                    </div>
-                                    <div className="checkout-field">
-                                        <label>Address *</label>
-                                        <input name="address" value={form.address} onChange={handleChange} />
-                                        {errors.address && <p className="checkout-error">{errors.address}</p>}
-                                    </div>
-                                    <div className="checkout-field">
-                                        <label>City *</label>
-                                        <input name="city" value={form.city} onChange={handleChange} />
-                                        {errors.city && <p className="checkout-error">{errors.city}</p>}
-                                    </div>
+                                    {["fullName", "phone", "address", "city"].map(field => (
+                                        <div className="checkout-field" key={field}>
+                                            <label>
+                                                {field === "fullName" ? "Full Name" :
+                                                field === "phone"    ? "Phone"     :
+                                                field === "address"  ? "Address"   : "City"} *
+                                            </label>
+                                            <input
+                                                name={field}
+                                                value={form[field]}
+                                                onChange={handleChange}
+                                                className={errors[field] ? "input-error" : ""}
+                                            />
+                                            {errors[field] && (
+                                                <p className="checkout-error">{errors[field]}</p>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            {/* SINGLE payment section */}
                             <div className="checkout-section">
                                 <h2>Payment</h2>
                                 <div className="payment-options">
+
                                     <div
                                         className={`payment-option ${paymentMethod === "cod" ? "selected" : ""}`}
                                         onClick={() => setPaymentMethod("cod")}
@@ -288,6 +329,7 @@ export default function Checkout() {
                                         <div className={`payment-radio ${paymentMethod === "cod" ? "active" : ""}`} />
                                         <span>Cash on Delivery</span>
                                     </div>
+
                                     <div
                                         className={`payment-option ${paymentMethod === "esewa" ? "selected" : ""}`}
                                         onClick={() => setPaymentMethod("esewa")}
@@ -298,23 +340,37 @@ export default function Checkout() {
                                             <span>Pay via eSewa</span>
                                         </div>
                                     </div>
+
+                                    {IS_DEMO && (
+                                        <div
+                                            className={`payment-option payment-option--demo ${paymentMethod === "demo" ? "selected" : ""}`}
+                                            onClick={() => setPaymentMethod("demo")}
+                                        >
+                                            <div className={`payment-radio ${paymentMethod === "demo" ? "active" : ""}`} />
+                                            <div className="demo-option-label">
+                                                <span className="demo-badge">⚡</span>
+                                                <div>
+                                                    <span>Demo Payment</span>
+                                                    <span className="demo-option-hint">Simulate success or failure</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
 
                         </div>
 
-                        {/* RIGHT */}
                         <div className="checkout-right">
-
                             <div className="checkout-summary">
-
                                 <h2>Order Summary</h2>
 
                                 <div className="checkout-items">
                                     {cartItems.map((item, idx) => (
                                         <div key={idx} className="checkout-item">
                                             <div className="checkout-item-image">
-                                                <img src={item.productId?.imageUrl || item.imageUrl} />
+                                                <img src={item.productId?.imageUrl || item.imageUrl} alt="" />
                                             </div>
                                             <div>
                                                 <p>{item.productId?.name || item.name}</p>
@@ -326,39 +382,29 @@ export default function Checkout() {
                                 </div>
 
                                 <div className="checkout-totals">
-
                                     <div className="summary-row">
                                         <span>Subtotal</span>
                                         <span>Rs. {total.toLocaleString()}</span>
                                     </div>
-
                                     <div className="summary-row">
                                         <span>Shipping</span>
                                         <span>{shipping === 0 ? "Free" : `Rs. ${shipping}`}</span>
                                     </div>
-
                                     <div className="summary-total">
                                         <span>Total</span>
                                         <span>Rs. {grandTotal.toLocaleString()}</span>
                                     </div>
-
                                 </div>
 
                                 <button
                                     onClick={handlePlaceOrder}
                                     disabled={placing}
-                                    className={`checkout-submit-btn ${paymentMethod === "esewa" ? "checkout-submit-esewa" : "checkout-submit-cod"}`}
+                                    className={btnClass}
                                 >
-                                    {placing
-                                        ? "Processing..."
-                                        : paymentMethod === "esewa"
-                                            ? "Pay with eSewa"
-                                            : "Place Order"
-                                    }
+                                    {btnLabel}
                                 </button>
 
                             </div>
-
                         </div>
 
                     </div>
@@ -366,8 +412,13 @@ export default function Checkout() {
             </section>
 
             <Footer />
+
+            {IS_DEMO && showDemoModal && DemoPaymentModal && (
+                <DemoPaymentModal
+                    onSelect={handleDemoOutcome}
+                    onClose={() => setShowDemoModal(false)}
+                />
+            )}
         </>
     );
 }
-
-

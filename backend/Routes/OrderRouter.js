@@ -5,9 +5,10 @@ const {
     getAllOrders,
     updateOrderStatus,
     cancelOrder,
-    deleteOrder, 
+    deleteOrder,
     initiateEsewaPayment,
-    verifyEsewaPayment 
+    verifyEsewaPayment,
+    demoPayment
 } = require('../Controllers/OrderController');
 const adminOnly = require('../Middlewares/AdminMiddleware');
 
@@ -19,6 +20,6 @@ router.put('/:id/cancel', cancelOrder);
 router.delete('/:id', adminOnly, deleteOrder);
 router.post('/esewa/initiate', initiateEsewaPayment);
 router.post('/esewa/verify', verifyEsewaPayment);
+router.post('/demo-payment', demoPayment);
 
 module.exports = router;
-
