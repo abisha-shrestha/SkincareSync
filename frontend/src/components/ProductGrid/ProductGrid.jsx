@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FiStar, FiChevronDown, FiChevronUp, FiSliders, FiX } from "react-icons/fi";
 import "./ProductGrid.css";
 
@@ -14,6 +14,12 @@ const SORT_OPTIONS = [
 ];
 
 const PRODUCTS_PER_PAGE = 12;
+
+// Read a param, fall back to defaultVal when absent or empty.
+function sp(params, key, defaultVal) {
+    const v = params.get(key);
+    return v !== null && v !== '' ? v : defaultVal;
+}
 
 function StarDisplay({ rating }) {
     if (!rating || rating === 0) return null;
@@ -36,40 +42,84 @@ function StarDisplay({ rating }) {
 
 export default function ProductGrid({ limit, skinTypeFilter }) {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filtersOpen, setFiltersOpen] = useState(true);
-
-    // Filters
-    const [activeCategory, setActiveCategory] = useState("All");
-    const [activeSkinType, setActiveSkinType] = useState("All");
-    const [activeBrand, setActiveBrand] = useState("All");
-    const [priceRange, setPriceRange] = useState([0, 50000]);
-    const [minRating, setMinRating] = useState(0);
-    const [sortBy, setSortBy] = useState("default");
     const [maxPrice, setMaxPrice] = useState(50000);
     const [brandOpen, setBrandOpen] = useState(false);
 
-    const [currentPage, setCurrentPage] = useState(1);
+    // All filter state derived directly from URL params
+    const filtersOpen    = sp(searchParams, 'fo', '1') === '1';
+    const activeCategory = sp(searchParams, 'cat', 'All');
+    const activeSkinType = sp(searchParams, 'skin', 'All');
+    const activeBrand    = sp(searchParams, 'brand', 'All');
+    const sortBy         = sp(searchParams, 'sort', 'default');
+    const minRating      = Number(sp(searchParams, 'rating', '0'));
+    const currentPage    = Number(sp(searchParams, 'page', '1'));
 
+    // Price range stored as "min_max" in one param
+    const priceParam = sp(searchParams, 'price', null);
+    const priceRange = useMemo(() => {
+        if (priceParam) {
+            const [lo, hi] = priceParam.split('_').map(Number);
+            return [lo, hi];
+        }
+        return [0, maxPrice];
+    }, [priceParam, maxPrice]);
+
+    // Patch one or more params at once
+    const patch = (updates) => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            Object.entries(updates).forEach(([k, v]) => {
+                if (v === null || v === undefined) next.delete(k);
+                else next.set(k, String(v));
+            });
+            return next;
+        }, { replace: true });
+    };
+
+    // Setters
+    const setFiltersOpen    = (v) => patch({ fo: v ? '1' : '0' });
+    const setActiveCategory = (v) => patch({ cat: v, page: '1' });
+    const setActiveSkinType = (v) => patch({ skin: v, page: '1' });
+    const setActiveBrand    = (v) => patch({ brand: v, page: '1' });
+    const setSortBy         = (v) => patch({ sort: v, page: '1' });
+    const setMinRating      = (v) => patch({ rating: String(v), page: '1' });
+    const setCurrentPage    = (v) => patch({ page: String(v) });
+    const setPriceRange     = (range) => patch({ price: `${range[0]}_${range[1]}`, page: '1' });
+
+    const prevSkinTypeFilter = useRef(skinTypeFilter);
+
+    useEffect(() => {
+        if (prevSkinTypeFilter.current !== skinTypeFilter) {
+            prevSkinTypeFilter.current = skinTypeFilter;
+            patch({ page: '1' });
+        }
+    }, [skinTypeFilter]);
+
+    // Fetch products once
     useEffect(() => {
         fetch('http://localhost:3000/api/products')
             .then(res => res.json())
             .then(data => {
                 const products = data.products || data || [];
                 setAllProducts(products);
+
                 const max = Math.max(...products.map(p => p.price || 0), 1000);
                 const roundedMax = Math.ceil(max / 1000) * 1000;
                 setMaxPrice(roundedMax);
-                setPriceRange([0, roundedMax]);
+
+                // Only set price default when not already in the URL
+                if (!searchParams.get('price')) {
+                    patch({ price: `0_${roundedMax}` });
+                }
+
                 setLoading(false);
             })
             .catch(err => { console.error('Error:', err); setLoading(false); });
     }, []);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [activeCategory, activeSkinType, activeBrand, priceRange, minRating, sortBy, skinTypeFilter]);
 
     const allBrands = useMemo(() => {
         return [...new Set(allProducts.map(p => p.brand?.trim()).filter(Boolean))].sort();
@@ -84,12 +134,15 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
     ].filter(Boolean).length;
 
     const clearAllFilters = () => {
-        setActiveCategory("All");
-        setActiveSkinType("All");
-        setActiveBrand("All");
-        setPriceRange([0, maxPrice]);
-        setMinRating(0);
-        setSortBy("default");
+        patch({
+            cat: 'All',
+            skin: 'All',
+            brand: 'All',
+            price: `0_${maxPrice}`,
+            rating: '0',
+            sort: 'default',
+            page: '1',
+        });
     };
 
     const displayedProducts = useMemo(() => {
@@ -100,17 +153,14 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                 p.skinTypes?.some(t => t.toLowerCase() === skinTypeFilter.toLowerCase())
             );
         }
-
         if (activeCategory !== "All") {
             result = result.filter(p => p.category === activeCategory);
         }
-
         if (!skinTypeFilter && activeSkinType !== "All") {
             result = result.filter(p =>
                 p.skinTypes?.some(t => t.toLowerCase() === activeSkinType.toLowerCase())
             );
         }
-
         if (activeBrand !== "All") {
             result = result.filter(p => p.brand?.trim() === activeBrand);
         }
@@ -129,7 +179,6 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         return limit ? result.slice(0, limit) : result;
     }, [allProducts, skinTypeFilter, activeCategory, activeSkinType, activeBrand, priceRange, minRating, sortBy, limit]);
 
-
     const totalPages = Math.ceil(displayedProducts.length / PRODUCTS_PER_PAGE);
     const paginatedProducts = displayedProducts.slice(
         (currentPage - 1) * PRODUCTS_PER_PAGE,
@@ -142,7 +191,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
         </div>
     );
 
-    // Home page - simple grid, no filters
+    // Home page snippet - no filters
     if (limit) {
         return (
             <div className="products-grid">
@@ -173,7 +222,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
     return (
         <div className="products-layout">
 
-            {/* ── FILTER SIDEBAR ── */}
+            {/* FILTER SIDEBAR */}
             <aside className={`filters-sidebar ${filtersOpen ? "open" : "closed"}`}>
                 <div className="filters-sidebar-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -220,7 +269,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                     </div>
                 </div>
 
-                {/* Skin Type — hidden if parent banner is controlling it */}
+                {/* Skin Type */}
                 {!skinTypeFilter && (
                     <div className="filter-section">
                         <p className="filter-section-title">Skin Type</p>
@@ -348,16 +397,14 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                         ))}
                     </div>
                 </div>
-
             </aside>
 
-            {/*  PRODUCTS AREA  */}
+            {/* PRODUCTS AREA */}
             <div className="products-main">
-
                 <div className="products-topbar">
                     <button
                         className="filters-toggle-btn"
-                        onClick={() => setFiltersOpen(o => !o)}
+                        onClick={() => setFiltersOpen(!filtersOpen)}
                     >
                         <FiSliders size={14} />
                         {filtersOpen ? "Hide Filters" : "Show Filters"}
@@ -397,9 +444,7 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                                             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
                                     )}
                                 </div>
-                                {product.brand && (
-                                    <p className="product-brand">{product.brand}</p>
-                                )}
+                                {product.brand && <p className="product-brand">{product.brand}</p>}
                                 <h3>{product.name}</h3>
                                 <StarDisplay rating={product.averageRating || 0} />
                                 <p className="product-price">Rs. {product.price.toLocaleString()}</p>
@@ -407,57 +452,55 @@ export default function ProductGrid({ limit, skinTypeFilter }) {
                             </div>
                         ))}
                     </div>
-
                 )}
-                                    {totalPages > 1 && (
-                        <div className="pagination">
-                            <button
-                                className="pagination-btn"
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                            >
-                                ← Prev
-                            </button>
 
-                            <div className="pagination-pages">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(page =>
-                                        page === 1 ||
-                                        page === totalPages ||
-                                        Math.abs(page - currentPage) <= 1
-                                    )
-                                    .reduce((acc, page, idx, arr) => {
-                                        if (idx > 0 && page - arr[idx - 1] > 1) {
-                                            acc.push('...');
-                                        }
-                                        acc.push(page);
-                                        return acc;
-                                    }, [])
-                                    .map((item, idx) =>
-                                        item === '...' ? (
-                                            <span key={`ellipsis-${idx}`} className="pagination-ellipsis">…</span>
-                                        ) : (
-                                            <button
-                                                key={item}
-                                                className={`pagination-page ${currentPage === item ? 'active' : ''}`}
-                                                onClick={() => setCurrentPage(item)}
-                                            >
-                                                {item}
-                                            </button>
-                                        )
-                                    )
-                                }
-                            </div>
+                {totalPages > 1 && (
+                    <div className="pagination">
+                        <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            ← Prev
+                        </button>
 
-                            <button
-                                className="pagination-btn"
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                            >
-                                Next →
-                            </button>
+                        <div className="pagination-pages">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(page =>
+                                    page === 1 ||
+                                    page === totalPages ||
+                                    Math.abs(page - currentPage) <= 1
+                                )
+                                .reduce((acc, page, idx, arr) => {
+                                    if (idx > 0 && page - arr[idx - 1] > 1) acc.push('...');
+                                    acc.push(page);
+                                    return acc;
+                                }, [])
+                                .map((item, idx) =>
+                                    item === '...' ? (
+                                        <span key={`ellipsis-${idx}`} className="pagination-ellipsis">…</span>
+                                    ) : (
+                                        <button
+                                            key={item}
+                                            className={`pagination-page ${currentPage === item ? 'active' : ''}`}
+                                            onClick={() => setCurrentPage(item)}
+                                        >
+                                            {item}
+                                        </button>
+                                    )
+                                )
+                            }
                         </div>
-                    )}
+
+                        <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next →
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
