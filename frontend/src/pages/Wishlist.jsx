@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 import { FiTrash2, FiHeart } from "react-icons/fi";
+import toast from "react-hot-toast";
 import "./Wishlist.css";
 
 export default function Wishlist() {
@@ -48,9 +49,10 @@ export default function Wishlist() {
                     price: product.price
                 })
             });
-            alert(`${product.name} added to cart!`);
+            toast.success(`${product.name} added to cart`);
         } catch (err) {
             console.error("Add to cart error:", err);
+            toast.error("Something went wrong");
         }
     };
 

@@ -63,6 +63,19 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     margin-bottom: 20px;
 }
 
+.auth-server-success {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0faf0;
+    color: #2d6a2d;
+    border: 1px solid #b2dfb2;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
 .auth-form { display: flex; flex-direction: column; gap: 20px; }
 
 .auth-field { display: flex; flex-direction: column; gap: 6px; }

@@ -6,6 +6,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
     const [errors, setErrors] = useState({});
     const [serverError, setServerError] = useState("");
+    const [serverSuccess, setServerSuccess] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -14,7 +15,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const [restoreEmail, setRestoreEmail] = useState('');
     const [restorePassword, setRestorePassword] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
-
+    
     // Forgot password state
     const [forgotMode, setForgotMode] = useState(false); 
     const [forgotStep, setForgotStep] = useState('email');
@@ -28,6 +29,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
         setFormData(prev => ({ name: "", email: prev.email, password: "", confirmPassword: "" }));
         setErrors({});
         setServerError("");
+        setServerSuccess("");
         setShowPassword(false);
         setShowConfirm(false);
         setForgotMode(false);
@@ -60,6 +62,7 @@ export default function AuthForm({ isLogin, toggleAuth }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setServerError("");
+        setServerSuccess("");
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
         setErrors({});
@@ -111,7 +114,10 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                 } else {
                     window.location.href = '/';
                 }
+            } else {
+                setServerSuccess(result.message || "Signup successfully");
             }
+
         } catch (err) {
             setServerError("Unable to connect. Please check your connection and try again.");
         } finally {
@@ -407,6 +413,11 @@ export default function AuthForm({ isLogin, toggleAuth }) {
                 {serverError && (
                     <div className="auth-server-error">
                         <FiAlertCircle /><span>{serverError}</span>
+                    </div>
+                )}
+                {serverSuccess && (
+                    <div className="auth-server-success">
+                        <FiCheck /><span>{serverSuccess}</span>
                     </div>
                 )}
 

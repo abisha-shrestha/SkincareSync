@@ -14,7 +14,7 @@ root.render(
             <Toaster
                 position="top-right"
                 toastOptions={{
-                    duration: 3000,
+                    duration: 1500,
                     style: {
                         background: '#faf8f5',
                         color: '#3a2e28',
